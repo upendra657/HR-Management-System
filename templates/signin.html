@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - HRMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center min-vh-100 align-items-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-lg border-0 rounded-lg glass-effect">
+            <div class="card-header bg-primary text-white text-center">
+                <h3 class="my-4"><i class="fas fa-sign-in-alt me-2"></i>Sign In</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('signin') }}">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
+                        <label for="username"><i class="fas fa-user me-2"></i>Username</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                        <label for="password"><i class="fas fa-lock me-2"></i>Password</label>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
+                        <a class="small text-white" href="{{ url_for('forgot_password') }}">
+                            <i class="fas fa-key me-1"></i>Forgot Password?
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center py-3">
+                <div class="small">
+                    <a href="{{ url_for('signup') }}" class="text-white text-decoration-none">
+                        <i class="fas fa-user-plus me-1"></i>Need an account? Sign up!
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+body {
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('{{ url_for('static', filename='images/work.jpeg') }}');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+.glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .glass-effect {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .card-title,
+[data-theme="dark"] .card-text,
+[data-theme="dark"] .form-floating > label {
+    color: white !important;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, #224abe, #4e73df);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.form-control {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.form-control:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+    color: white;
+}
+
+.form-floating > label {
+    color: white;
+}
+
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+    color: white;
+}
+
+[data-theme="dark"] .form-control {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+[data-theme="dark"] .form-control:focus {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: var(--primary-color);
+    color: white;
+}
+</style>
+{% endblock %}

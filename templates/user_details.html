@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}User Details{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-user me-2"></i>User Details
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Email</th>
+                                <th>Mobile</th>
+                                <th>Country</th>
+                                <th>Date of Joining</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>John Doe</td>
+                                <td>IT</td>
+                                <td>john@example.com</td>
+                                <td>1234567890</td>
+                                <td>USA</td>
+                                <td>2024-01-01</td>
+                            </tr>
+                            <tr>
+                                <td>Jane Smith</td>
+                                <td>HR</td>
+                                <td>jane@example.com</td>
+                                <td>9876543210</td>
+                                <td>UK</td>
+                                <td>2024-02-01</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

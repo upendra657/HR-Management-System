@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Task{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-tasks me-2"></i>Daily Task
+                </h5>
+                <form method="POST" action="{{ url_for('submit_task') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="task_date" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="task_date" name="task_date" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="employee_id" class="form-label">Employee ID</label>
+                            <input type="text" class="form-control" id="employee_id" name="employee_id" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="employee_name" class="form-label">Employee Name</label>
+                            <input type="text" class="form-control" id="employee_name" name="employee_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="project_site" class="form-label">Project Site</label>
+                            <input type="text" class="form-control" id="project_site" name="project_site" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="in_time" class="form-label">In Time</label>
+                            <input type="time" class="form-control" id="in_time" name="in_time" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="out_time" class="form-label">Out Time</label>
+                            <input type="time" class="form-control" id="out_time" name="out_time" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="task" class="form-label">Task</label>
+                        <textarea class="form-control" id="task" name="task" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="remarks" class="form-label">Remarks</label>
+                        <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Submit Task
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

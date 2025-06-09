@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Add Task - HRMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Add New Task</h1>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-plus me-1"></i>
+            Task Details
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('add_task') }}">
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="title" name="title" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="assigned_to" class="form-label">Assign To</label>
+                    <select class="form-select" id="assigned_to" name="assigned_to" required>
+                        <option value="">Select Employee</option>
+                        {% for employee in employees %}
+                        <option value="{{ employee.username }}">{{ employee.employee_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="due_date" class="form-label">Due Date</label>
+                    <input type="date" class="form-control" id="due_date" name="due_date" required>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('tasks') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Tasks
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Save Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('due_date').min = today;
+});
+</script>
+{% endblock %} 

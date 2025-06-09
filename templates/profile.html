@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Employee Profile - HRMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4 mb-4">
+        <i class="fas fa-user me-2"></i>Employee Profile
+    </h1>
+
+    <div class="row">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Profile Information</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('profile') }}" class="needs-validation" novalidate>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="employee_id" class="form-label">Employee ID</label>
+                                <input type="text" class="form-control" id="employee_id" name="employee_id" required>
+                                <div class="invalid-feedback">
+                                    Please enter your employee ID.
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="employee_name" class="form-label">Employee Name</label>
+                                <input type="text" class="form-control" id="employee_name" name="employee_name" required>
+                                <div class="invalid-feedback">
+                                    Please enter your name.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="department" class="form-label">Department</label>
+                                <select class="form-select" id="department" name="department" required>
+                                    <option value="">Select Department</option>
+                                    <option value="IT">IT</option>
+                                    <option value="HR">HR</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Operations">Operations</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select your department.
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="date_of_joining" class="form-label">Date of Joining</label>
+                                <input type="date" class="form-control" id="date_of_joining" name="date_of_joining" required>
+                                <div class="invalid-feedback">
+                                    Please select your joining date.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                                <div class="invalid-feedback">
+                                    Please enter a valid email address.
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="mobile_no" class="form-label">Mobile Number</label>
+                                <input type="tel" class="form-control" id="mobile_no" name="mobile_no" required>
+                                <div class="invalid-feedback">
+                                    Please enter your mobile number.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="country" class="form-label">Country</label>
+                                <input type="text" class="form-control" id="country" name="country" required>
+                                <div class="invalid-feedback">
+                                    Please enter your country.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Save Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+
+// Set max date for date of joining to today
+document.getElementById('date_of_joining').max = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}
