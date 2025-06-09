@@ -8,16 +8,51 @@ A modern web-based Human Resource Management System built with Flask and Bootstr
 - Role-based Access Control (HR/Employee)
 - Dashboard with Statistics
 - Task Management
+  - Daily task submission with time tracking
+  - Task history and reporting
+  - Project site tracking
+  - Time validation (in/out time)
 - User Profile Management
 - Department-wise Employee Management
 - Modern and Responsive UI
+- Form Validation (Client & Server-side)
+- Flash Messages for User Feedback
+- Dark/Light Mode Toggle
 
 ## Tech Stack
 
 - Backend: Python Flask
 - Frontend: HTML, CSS, JavaScript, Bootstrap 5
 - Database: SQLite
-- Additional Libraries: DataTables, Chart.js
+- Additional Libraries: DataTables, Chart.js, Font Awesome
+
+## Database Schema
+
+### Employee Table
+- id (PRIMARY KEY)
+- employee_name
+- username (UNIQUE)
+- password
+- department
+- gender
+- date_of_joining
+- email (UNIQUE)
+- country
+- mobile_no
+- role (DEFAULT 'employee')
+
+### Tasks Table
+- id (PRIMARY KEY)
+- task_date
+- employee_id
+- employee_name
+- project_site
+- in_time
+- out_time
+- task
+- remarks
+- username (FOREIGN KEY)
+- created_at
 
 ## Setup Instructions
 
@@ -66,6 +101,7 @@ HRMS/
 ├── templates/
 │   ├── base.html
 │   ├── dashboard.html
+│   ├── daily-task.html
 │   ├── signin.html
 │   ├── signup.html
 │   └── ...
@@ -74,6 +110,29 @@ HRMS/
 ├── requirements.txt
 └── README.md
 ```
+
+## Recent Updates
+
+### Task Management Improvements
+- Added daily task submission form with pre-filled employee information
+- Implemented time validation for in/out time
+- Added project site tracking
+- Enhanced form validation (both client and server-side)
+- Added flash messages for better user feedback
+- Improved UI with Bootstrap 5 components
+
+### Security Enhancements
+- Added session management
+- Implemented role-based access control
+- Added input validation
+- Protected routes with authentication checks
+
+### UI/UX Improvements
+- Added floating labels for form inputs
+- Implemented responsive design
+- Added dark/light mode toggle
+- Enhanced form validation feedback
+- Improved navigation and layout
 
 ## Contributing
 

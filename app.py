@@ -202,7 +202,27 @@ def profile():
 
 @app.route('/activity')
 def activity():
-    return render_template('daily-task.html')
+    if 'username' not in session:
+        flash('Please log in to access this page.')
+        return redirect(url_for('signin'))
+    
+    # Get employee details
+    conn = get_db_connection()
+    employee = conn.execute('SELECT * FROM employee WHERE username = ?', (session['username'],)).fetchone()
+    conn.close()
+    
+    if not employee:
+        flash('Employee details not found.')
+        return redirect(url_for('dashboard'))
+    
+    # Get today's date in YYYY-MM-DD format
+    from datetime import datetime
+    today_date = datetime.now().strftime('%Y-%m-%d')
+    
+    return render_template('daily-task.html',
+                         employee_id=employee['id'],
+                         employee_name=employee['employee_name'],
+                         today_date=today_date)
 
 @app.route('/submit_task', methods=['POST'])
 def submit_task():
@@ -210,26 +230,35 @@ def submit_task():
         flash('Please log in to submit tasks.')
         return redirect(url_for('signin'))
 
-    task_date = request.form['task_date']
-    employee_id = request.form['employee_id']
-    employee_name = request.form['employee_name']
-    project_site = request.form['project_site']
-    in_time = request.form['in_time']
-    out_time = request.form['out_time']
-    task = request.form['task']
-    remarks = request.form['remarks']
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO tasks (task_date, employee_id, employee_name, project_site, in_time, out_time, task, remarks, username)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (task_date, employee_id, employee_name, project_site, in_time, out_time, task, remarks, session['username']))
-    conn.commit()
-    conn.close()
+    try:
+        task_date = request.form['task_date']
+        employee_id = request.form['employee_id']
+        employee_name = request.form['employee_name']
+        project_site = request.form['project_site']
+        in_time = request.form['in_time']
+        out_time = request.form['out_time']
+        task = request.form['task']
+        remarks = request.form.get('remarks', '')
+        
+        # Validate time
+        if in_time >= out_time:
+            flash('Out time must be after in time.')
+            return redirect(url_for('activity'))
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO tasks (task_date, employee_id, employee_name, project_site, in_time, out_time, task, remarks, username)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (task_date, employee_id, employee_name, project_site, in_time, out_time, task, remarks, session['username']))
+        conn.commit()
+        conn.close()
 
-    flash('Task submitted successfully.')
-    return redirect(url_for('activity'))
+        flash('Task submitted successfully.')
+        return redirect(url_for('activity'))
+    except Exception as e:
+        flash('An error occurred while submitting the task. Please try again.')
+        return redirect(url_for('activity'))
 
 @app.route('/report')
 def report():
