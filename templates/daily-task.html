@@ -3,58 +3,93 @@
 {% block title %}Daily Task{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="fas fa-tasks me-2"></i>Daily Task
-                </h5>
-                <form method="POST" action="{{ url_for('submit_task') }}">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="task_date" class="form-label">Date</label>
-                            <input type="date" class="form-control" id="task_date" name="task_date" required>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tasks me-2"></i>Daily Task Entry
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('submit_task') }}" class="needs-validation" novalidate>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="date" class="form-control" id="task_date" name="task_date" required>
+                                    <label for="task_date">Date</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="employee_id" name="employee_id" required>
+                                    <label for="employee_id">Employee ID</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="employee_name" name="employee_name" required>
+                                    <label for="employee_name">Employee Name</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="project_site" name="project_site" required>
+                                    <label for="project_site">Project Site</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="time" class="form-control" id="in_time" name="in_time" required>
+                                    <label for="in_time">In Time</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="time" class="form-control" id="out_time" name="out_time" required>
+                                    <label for="out_time">Out Time</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-floating mb-3">
+                                    <textarea class="form-control" id="task" name="task" style="height: 100px" required></textarea>
+                                    <label for="task">Task Description</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-floating mb-3">
+                                    <textarea class="form-control" id="remarks" name="remarks" style="height: 80px"></textarea>
+                                    <label for="remarks">Remarks</label>
+                                </div>
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save me-2"></i>Submit Task
+                                </button>
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="employee_id" class="form-label">Employee ID</label>
-                            <input type="text" class="form-control" id="employee_id" name="employee_id" required>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="employee_name" class="form-label">Employee Name</label>
-                            <input type="text" class="form-control" id="employee_name" name="employee_name" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="project_site" class="form-label">Project Site</label>
-                            <input type="text" class="form-control" id="project_site" name="project_site" required>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="in_time" class="form-label">In Time</label>
-                            <input type="time" class="form-control" id="in_time" name="in_time" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="out_time" class="form-label">Out Time</label>
-                            <input type="time" class="form-control" id="out_time" name="out_time" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="task" class="form-label">Task</label>
-                        <textarea class="form-control" id="task" name="task" rows="3" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="remarks" class="form-label">Remarks</label>
-                        <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i>Submit Task
-                    </button>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Add Bootstrap form validation
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
 {% endblock %}

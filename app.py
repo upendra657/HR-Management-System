@@ -23,7 +23,25 @@ def init_db():
             date_of_joining DATE NOT NULL,
             email TEXT NOT NULL UNIQUE,
             country TEXT NOT NULL,
-            mobile_no NUMERIC(10) NOT NULL
+            mobile_no NUMERIC(10) NOT NULL,
+            role TEXT DEFAULT 'employee'
+        )
+    ''')
+    
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_date DATE NOT NULL,
+            employee_id TEXT NOT NULL,
+            employee_name TEXT NOT NULL,
+            project_site TEXT NOT NULL,
+            in_time TIME NOT NULL,
+            out_time TIME NOT NULL,
+            task TEXT NOT NULL,
+            remarks TEXT,
+            username TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (username) REFERENCES employee (username)
         )
     ''')
     conn.commit()
