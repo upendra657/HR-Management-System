@@ -33,3 +33,7 @@ htmlcov/
 .idea/
 .vscode/
 *.swp
+
+# Personal notes - never commit these
+docs/
+*interview-guide*
