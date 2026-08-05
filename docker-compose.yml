@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: hrms
+      POSTGRES_PASSWORD: hrms
+      POSTGRES_DB: hrms
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # The app waits for this before starting, so migrations never race
+      # an unready database.
+      test: ["CMD-SHELL", "pg_isready -U hrms -d hrms"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  web:
+    build: .
+    command: >
+      sh -c "flask db upgrade &&
+             flask run --host=0.0.0.0 --port=8000"
+    environment:
+      FLASK_APP: wsgi.py
+      FLASK_ENV: development
+      FLASK_DEBUG: "1"
+      DATABASE_URL: postgresql+psycopg://hrms:hrms@db:5432/hrms
+      SECRET_KEY: dev-only-do-not-use-in-production
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

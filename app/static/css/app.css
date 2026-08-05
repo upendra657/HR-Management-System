@@ -1,0 +1,4 @@
+/* Project styles layered on top of Bootstrap. */
+body { font-size: 0.95rem; }
+.navbar-brand { letter-spacing: 0.02em; }
+.table-sm td, .table-sm th { vertical-align: middle; }

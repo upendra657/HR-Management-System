@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5 col-lg-4">
+    <h1 class="h4 mb-1">Sign in</h1>
+    <p class="text-body-secondary small mb-4">Workforce management system</p>
+
+    <form method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="mb-3">
+        <label class="form-label" for="username">Username</label>
+        <input class="form-control" id="username" name="username" required autofocus
+               autocomplete="username" value="{{ username or '' }}">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="password">Password</label>
+        <input class="form-control" id="password" name="password" type="password" required
+               autocomplete="current-password">
+      </div>
+
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="remember" name="remember">
+        <label class="form-check-label" for="remember">Keep me signed in</label>
+      </div>
+
+      <button class="btn btn-primary w-100" type="submit">Sign in</button>
+    </form>
+
+    {% if demo_mode %}
+    <div class="alert alert-info small mt-4 mb-0">
+      <strong>Demo access</strong><br>
+      HR admin — <code>demo_hr</code> / <code>demo12345</code><br>
+      Employee — <code>demo_emp</code> / <code>demo12345</code>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

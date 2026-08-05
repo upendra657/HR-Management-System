@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="h4 mb-4">Dashboard</h1>
+<div class="alert alert-secondary">
+  Signed in as <strong>{{ current_user.full_name }}</strong>
+  ({{ current_user.employee_code }}) — {{ current_user.job_title }},
+  {{ current_user.department.name }}.
+</div>
+<p class="text-body-secondary small mb-0">Analytics land in phase 3.</p>
+{% endblock %}

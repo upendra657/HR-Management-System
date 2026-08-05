@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}500{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+  <p class="display-5 fw-semibold mb-2">500</p>
+  <p class="text-body-secondary">Something went wrong on our end.</p>
+  <a class="btn btn-outline-secondary btn-sm mt-3" href="{{ url_for('main.index') }}">Go back</a>
+</div>
+{% endblock %}
