@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}{{ employee.full_name }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb small">
+    <li class="breadcrumb-item"><a href="{{ url_for('employees.index') }}">Directory</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ employee.full_name }}</li>
+  </ol>
+</nav>
+
+<div class="d-flex align-items-center gap-3 mb-4">
+  <div class="rounded-circle bg-secondary-subtle text-secondary-emphasis d-flex align-items-center
+              justify-content-center fw-semibold"
+       style="width:56px;height:56px;font-size:1.1rem;">{{ employee.initials }}</div>
+  <div>
+    <h1 class="h4 mb-0">{{ employee.full_name }}</h1>
+    <p class="text-body-secondary mb-0">
+      {{ employee.job_title }} · {{ employee.department.name }}
+      <span class="font-monospace small ms-2">{{ employee.employee_code }}</span>
+    </p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h6 text-body-secondary mb-3">Details</h2>
+        <dl class="row small mb-0">
+          <dt class="col-5 fw-normal text-body-secondary">Email</dt>
+          <dd class="col-7 text-break">{{ employee.email }}</dd>
+
+          <dt class="col-5 fw-normal text-body-secondary">Manager</dt>
+          <dd class="col-7">
+            {% if employee.manager %}
+              <a href="{{ url_for('employees.detail', employee_id=employee.manager.id) }}">
+                {{ employee.manager.full_name }}</a>
+            {% else %}—{% endif %}
+          </dd>
+
+          <dt class="col-5 fw-normal text-body-secondary">Employment</dt>
+          <dd class="col-7">{{ employee.employment_type.label }}</dd>
+
+          <dt class="col-5 fw-normal text-body-secondary">Joined</dt>
+          <dd class="col-7">{{ employee.join_date.strftime('%d %b %Y') }}</dd>
+
+          {% if employee.exit_date %}
+          <dt class="col-5 fw-normal text-body-secondary">Left</dt>
+          <dd class="col-7">{{ employee.exit_date.strftime('%d %b %Y') }}</dd>
+          {% endif %}
+
+          <dt class="col-5 fw-normal text-body-secondary">Tenure</dt>
+          <dd class="col-7">{{ (employee.tenure_days / 365.25) | round(1) }} years</dd>
+
+          {% if current_user.is_hr and employee.base_salary %}
+          <dt class="col-5 fw-normal text-body-secondary">Salary</dt>
+          <dd class="col-7">UGX {{ "{:,.0f}".format(employee.base_salary) }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+
+    {% if employee.reports %}
+    <div class="card mt-3">
+      <div class="card-body">
+        <h2 class="h6 text-body-secondary mb-3">Direct reports ({{ employee.reports | length }})</h2>
+        <ul class="list-unstyled small mb-0">
+          {% for r in employee.reports %}
+          <li class="mb-1">
+            <a href="{{ url_for('employees.detail', employee_id=r.id) }}">{{ r.full_name }}</a>
+            <span class="text-body-secondary">· {{ r.job_title }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h2 class="h6 text-body-secondary mb-3">Last 90 days</h2>
+        <div class="row text-center g-3">
+          <div class="col-4 col-md-3">
+            <div class="h4 mb-0">{{ summary.attendance_rate }}%</div>
+            <div class="small text-body-secondary">Attendance</div>
+          </div>
+          <div class="col-4 col-md-3">
+            <div class="h4 mb-0">{{ summary.average_hours }}</div>
+            <div class="small text-body-secondary">Avg hours/day</div>
+          </div>
+          <div class="col-4 col-md-3">
+            <div class="h4 mb-0">{{ summary.hours_total }}</div>
+            <div class="small text-body-secondary">Total hours</div>
+          </div>
+          <div class="col-4 col-md-3">
+            <div class="h4 mb-0">{{ summary.days_leave }}</div>
+            <div class="small text-body-secondary">Leave days</div>
+          </div>
+        </div>
+        {% if summary.missing_clock_out %}
+        <p class="small text-warning-emphasis mt-3 mb-0">
+          {{ summary.missing_clock_out }} day{{ "" if summary.missing_clock_out == 1 else "s" }}
+          with no clock-out recorded — excluded from the hours average.
+        </p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h2 class="h6 text-body-secondary mb-3">Recent attendance</h2>
+        {% if attendance %}
+        <table class="table table-sm small mb-0">
+          <thead><tr><th>Date</th><th>Status</th><th>In</th><th>Out</th><th class="text-end">Hours</th></tr></thead>
+          <tbody>
+            {% for a in attendance %}
+            <tr>
+              <td>{{ a.work_date.strftime('%a %d %b') }}</td>
+              <td>{{ a.status.label }}</td>
+              <td>{{ a.clock_in.strftime('%H:%M') if a.clock_in else "—" }}</td>
+              <td>
+                {% if a.clock_out %}{{ a.clock_out.strftime('%H:%M') }}
+                {% elif a.clock_in %}<span class="text-warning-emphasis">missing</span>
+                {% else %}—{% endif %}
+              </td>
+              <td class="text-end">{{ a.hours_worked if a.hours_worked else "—" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="small text-body-secondary mb-0">No attendance recorded.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h6 text-body-secondary mb-3">Recent work</h2>
+        {% if tasks %}
+        <ul class="list-unstyled small mb-0">
+          {% for t in tasks %}
+          <li class="border-bottom py-2">
+            <div class="d-flex justify-content-between gap-3">
+              <span>{{ t.description }}</span>
+              <span class="text-body-secondary text-nowrap">{{ t.hours }} h</span>
+            </div>
+            <span class="text-body-secondary">
+              {{ t.task_date.strftime('%d %b') }} · {{ t.project.code }} {{ t.project.name }}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="small text-body-secondary mb-0">No tasks logged.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

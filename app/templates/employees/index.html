@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Directory{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-baseline justify-content-between mb-3">
+  <h1 class="h4 mb-0">Directory</h1>
+  <span class="text-body-secondary small">{{ page.total }} {{ "person" if page.total == 1 else "people" }}</span>
+</div>
+
+<form method="get" class="row g-2 mb-4">
+  <div class="col-sm-5">
+    <label class="visually-hidden" for="q">Search</label>
+    <input class="form-control" id="q" name="q" value="{{ q }}"
+           placeholder="Name, email, code or job title">
+  </div>
+  <div class="col-sm-3">
+    <label class="visually-hidden" for="department">Department</label>
+    <select class="form-select" id="department" name="department">
+      <option value="">All departments</option>
+      {% for d in departments %}
+        <option value="{{ d.id }}" {{ "selected" if d.id == selected_department }}>{{ d.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-sm-2">
+    <label class="visually-hidden" for="status">Status</label>
+    <select class="form-select" id="status" name="status">
+      <option value="">Any status</option>
+      {% for s in statuses %}
+        <option value="{{ s.value }}" {{ "selected" if s.value == selected_status }}>{{ s.label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-sm-2 d-grid">
+    <button class="btn btn-outline-secondary" type="submit">Filter</button>
+  </div>
+</form>
+
+{% if page.items %}
+<div class="table-responsive">
+  <table class="table table-sm align-middle">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Code</th>
+        <th class="d-none d-md-table-cell">Job title</th>
+        <th class="d-none d-lg-table-cell">Department</th>
+        <th class="d-none d-lg-table-cell">Manager</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in page.items %}
+      <tr>
+        <td><a href="{{ url_for('employees.detail', employee_id=e.id) }}">{{ e.full_name }}</a></td>
+        <td class="text-body-secondary font-monospace small">{{ e.employee_code }}</td>
+        <td class="d-none d-md-table-cell">{{ e.job_title }}</td>
+        <td class="d-none d-lg-table-cell">{{ e.department.name }}</td>
+        <td class="d-none d-lg-table-cell text-body-secondary">
+          {{ e.manager.full_name if e.manager else "—" }}
+        </td>
+        <td>
+          {% if e.status.value == 'active' %}
+            <span class="badge text-bg-success-subtle text-success-emphasis">Active</span>
+          {% elif e.status.value == 'on_leave' %}
+            <span class="badge text-bg-warning-subtle text-warning-emphasis">On leave</span>
+          {% else %}
+            <span class="badge text-bg-secondary-subtle text-secondary-emphasis">Left</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if page.pages > 1 %}
+<nav class="d-flex justify-content-between align-items-center">
+  <span class="text-body-secondary small">
+    Showing {{ page.first_index }}–{{ page.last_index }} of {{ page.total }}
+  </span>
+  <ul class="pagination pagination-sm mb-0">
+    <li class="page-item {{ 'disabled' if not page.has_prev }}">
+      <a class="page-link" href="{{ url_for('employees.index', page=page.page - 1, q=q, department=selected_department or None, status=selected_status or None) }}">Previous</a>
+    </li>
+    {% for n in page.window() %}
+      <li class="page-item {{ 'active' if n == page.page }}">
+        <a class="page-link" href="{{ url_for('employees.index', page=n, q=q, department=selected_department or None, status=selected_status or None) }}">{{ n }}</a>
+      </li>
+    {% endfor %}
+    <li class="page-item {{ 'disabled' if not page.has_next }}">
+      <a class="page-link" href="{{ url_for('employees.index', page=page.page + 1, q=q, department=selected_department or None, status=selected_status or None) }}">Next</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center text-body-secondary py-5">
+  <p class="mb-1">No employees match those filters.</p>
+  <a class="small" href="{{ url_for('employees.index') }}">Clear filters</a>
+</div>
+{% endif %}
+{% endblock %}
