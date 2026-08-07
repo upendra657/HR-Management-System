@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Timesheet{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
+  <h1 class="h4 mb-0">
+    {% if is_self %}My timesheet{% else %}{{ employee.full_name }}{% endif %}
+  </h1>
+  <form method="get" class="d-flex gap-2">
+    {% if not is_self %}<input type="hidden" name="employee" value="{{ employee.id }}">{% endif %}
+    <select class="form-select form-select-sm" name="month" onchange="this.form.submit()">
+      {% for m in range(1, 13) %}
+      <option value="{{ m }}" {{ "selected" if m == month_no }}>
+        {{ ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m-1] }}
+      </option>
+      {% endfor %}
+    </select>
+    <select class="form-select form-select-sm" name="year" onchange="this.form.submit()">
+      {% for y in range(today.year - 3, today.year + 1) %}
+      <option value="{{ y }}" {{ "selected" if y == year }}>{{ y }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+{% if is_self %}
+<div class="card mb-4">
+  <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div>
+      <div class="small text-body-secondary">Today, {{ today.strftime('%A %d %B') }}</div>
+      {% if today_log and today_log.clock_in %}
+        <div>
+          In at <strong>{{ today_log.clock_in.strftime('%H:%M') }}</strong>
+          {% if today_log.clock_out %}
+            · out at <strong>{{ today_log.clock_out.strftime('%H:%M') }}</strong>
+            · {{ today_log.hours_worked }} hours
+          {% else %}
+            <span class="text-success">· still clocked in</span>
+          {% endif %}
+        </div>
+        {% if today_totals.worked and today_totals.unlogged %}
+        <div class="small text-warning-emphasis">
+          {{ today_totals.unlogged }} hours not yet booked to a project.
+        </div>
+        {% endif %}
+      {% elif today_log %}
+        <div>Recorded as {{ today_log.status.label }}.</div>
+      {% else %}
+        <div class="text-body-secondary">Not clocked in.</div>
+      {% endif %}
+    </div>
+
+    <div class="d-flex gap-2">
+      {% if not today_log or not today_log.clock_in %}
+        <form method="post" action="{{ url_for('attendance.clock_in') }}" class="d-flex gap-2">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-primary btn-sm" type="submit">Clock in</button>
+          <button class="btn btn-outline-secondary btn-sm" type="submit" name="remote" value="1">
+            Clock in remote
+          </button>
+        </form>
+      {% elif not today_log.clock_out %}
+        <form method="post" action="{{ url_for('attendance.clock_out') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-primary btn-sm" type="submit">Clock out</button>
+        </form>
+      {% endif %}
+      <a class="btn btn-outline-secondary btn-sm"
+         href="{{ url_for('attendance.day', the_date=today.isoformat()) }}">Log time</a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+  {% for label, value in [
+       ("Hours", summary.hours), ("Present", summary.present), ("Remote", summary.remote),
+       ("Leave", summary.leave), ("Absent", summary.absent), ("Not recorded", summary.unrecorded)] %}
+  <div class="col-4 col-md-2">
+    <div class="card h-100"><div class="card-body py-3 text-center">
+      <div class="h5 mb-0">{{ value }}</div>
+      <div class="small text-body-secondary">{{ label }}</div>
+    </div></div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if summary.missing_clock_out %}
+<div class="alert alert-warning py-2 small">
+  {{ summary.missing_clock_out }} day{{ "" if summary.missing_clock_out == 1 else "s" }}
+  this month with no clock-out. Those hours are not counted.
+</div>
+{% endif %}
+
+{% if logs %}
+<div class="table-responsive">
+  <table class="table table-sm align-middle">
+    <thead><tr>
+      <th>Date</th><th>Status</th><th>In</th><th>Out</th>
+      <th class="text-end">Hours</th><th class="d-none d-md-table-cell">Notes</th><th></th>
+    </tr></thead>
+    <tbody>
+      {% for log in logs %}
+      <tr class="{{ 'table-warning' if log.clock_in and not log.clock_out }}">
+        <td>{{ log.work_date.strftime('%a %d') }}</td>
+        <td>{{ log.status.label }}</td>
+        <td>{{ log.clock_in.strftime('%H:%M') if log.clock_in else "—" }}</td>
+        <td>
+          {% if log.clock_out %}{{ log.clock_out.strftime('%H:%M') }}
+          {% elif log.clock_in %}<span class="text-warning-emphasis">missing</span>
+          {% else %}—{% endif %}
+        </td>
+        <td class="text-end">{{ log.hours_worked or "—" }}</td>
+        <td class="d-none d-md-table-cell small text-body-secondary">{{ log.notes or "" }}</td>
+        <td class="text-end">
+          <a class="small" href="{{ url_for('attendance.day', the_date=log.work_date.isoformat(), employee=employee.id) }}">Open</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-body-secondary text-center py-5 mb-0">Nothing recorded for this month.</p>
+{% endif %}
+{% endblock %}

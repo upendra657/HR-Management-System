@@ -20,6 +20,7 @@
     <div class="collapse navbar-collapse" id="nav">
       <ul class="navbar-nav me-auto">
         <li class="nav-item"><a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('attendance.index') }}">Timesheet</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('employees.index') }}">Directory</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('leave.index') }}">Leave</a></li>
         {% if current_user.is_manager %}

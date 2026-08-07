@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}{{ on.strftime('%d %b %Y') }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb small">
+    <li class="breadcrumb-item">
+      <a href="{{ url_for('attendance.index', employee=employee.id) }}">Timesheet</a>
+    </li>
+    <li class="breadcrumb-item active">{{ on.strftime('%d %b %Y') }}</li>
+  </ol>
+</nav>
+
+<h1 class="h4 mb-1">{{ on.strftime('%A %d %B %Y') }}</h1>
+<p class="text-body-secondary small mb-4">{{ employee.full_name }}</p>
+
+{% if not editable %}
+<div class="alert alert-secondary py-2 small">
+  This day is locked. Only HR can change it now.
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h6 text-body-secondary mb-3">Attendance</h2>
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="record">
+
+          <div class="mb-3">
+            <label class="form-label" for="status">Status</label>
+            <select class="form-select" id="status" name="status" {{ "disabled" if not editable }}>
+              {% for s in statuses %}
+              <option value="{{ s.value }}"
+                {{ "selected" if log and log.status == s }}>{{ s.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="clock_in">In</label>
+              <input class="form-control" type="time" id="clock_in" name="clock_in"
+                     value="{{ log.clock_in.strftime('%H:%M') if log and log.clock_in else '' }}"
+                     {{ "disabled" if not editable }}>
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="clock_out">Out</label>
+              <input class="form-control" type="time" id="clock_out" name="clock_out"
+                     value="{{ log.clock_out.strftime('%H:%M') if log and log.clock_out else '' }}"
+                     {{ "disabled" if not editable }}>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="notes">Notes</label>
+            <input class="form-control" id="notes" name="notes"
+                   value="{{ log.notes or '' if log else '' }}" {{ "disabled" if not editable }}>
+          </div>
+
+          {% if editable %}
+          <button class="btn btn-primary btn-sm" type="submit">Save day</button>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-baseline mb-3">
+          <h2 class="h6 text-body-secondary mb-0">Time logged</h2>
+          <span class="small {{ 'text-danger' if totals.over_logged else 'text-body-secondary' }}">
+            {{ totals.logged }} of {{ totals.worked }} hours
+            {%- if totals.unlogged %} · {{ totals.unlogged }} unbooked{% endif %}
+          </span>
+        </div>
+
+        {% if tasks %}
+        <ul class="list-unstyled small mb-0">
+          {% for t in tasks %}
+          <li class="border-bottom py-2 d-flex justify-content-between gap-3">
+            <div>
+              <div>{{ t.description }}</div>
+              <span class="text-body-secondary">{{ t.project.code }} {{ t.project.name }}</span>
+              {% if t.remarks %}<div class="text-body-secondary fst-italic">{{ t.remarks }}</div>{% endif %}
+            </div>
+            <div class="text-nowrap text-end">
+              <div>{{ t.hours }} h</div>
+              {% if editable %}
+              <form method="post" action="{{ url_for('attendance.delete_task', task_id=t.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="date" value="{{ on.isoformat() }}">
+                <button class="btn btn-link btn-sm text-danger p-0" type="submit">Remove</button>
+              </form>
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="small text-body-secondary mb-0">Nothing logged for this day.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if editable %}
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h6 text-body-secondary mb-3">Log time</h2>
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="task">
+
+          <div class="row g-2 mb-3">
+            <div class="col-8">
+              <label class="form-label" for="project_id">Project</label>
+              <select class="form-select" id="project_id" name="project_id" required>
+                {% for p in projects %}
+                <option value="{{ p.id }}">{{ p.code }} — {{ p.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-4">
+              <label class="form-label" for="hours">Hours</label>
+              <input class="form-control" type="number" id="hours" name="hours"
+                     step="0.25" min="0.25" max="24" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="description">What did you do?</label>
+            <input class="form-control" id="description" name="description" required>
+          </div>
+
+          <button class="btn btn-primary btn-sm" type="submit">Add entry</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
