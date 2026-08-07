@@ -21,6 +21,10 @@
       <ul class="navbar-nav me-auto">
         <li class="nav-item"><a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('employees.index') }}">Directory</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('leave.index') }}">Leave</a></li>
+        {% if current_user.is_manager %}
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('leave.approvals') }}">Approvals</a></li>
+        {% endif %}
       </ul>
       <ul class="navbar-nav">
         <li class="nav-item dropdown">

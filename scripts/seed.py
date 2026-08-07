@@ -15,7 +15,6 @@ model instances is slow and pointless when nothing needs the identity map.
 from __future__ import annotations
 
 import random
-from collections.abc import Iterator
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 
@@ -39,6 +38,7 @@ from app.models import (
     Role,
     Task,
 )
+from app.services.dates import public_holidays, working_days
 
 SEED = 20240617
 BATCH = 5000
@@ -122,30 +122,6 @@ class Rng:
 
     def weighted(self, choices: list, weights: list[float]):
         return self.r.choices(choices, weights=weights, k=1)[0]
-
-
-def working_days(start: date, end: date) -> Iterator[date]:
-    """Weekdays between two dates, inclusive."""
-    day = start
-    while day <= end:
-        if day.weekday() < 5:
-            yield day
-        day += timedelta(days=1)
-
-
-def public_holidays(start: date, end: date) -> set[date]:
-    """Fixed-date Ugandan public holidays in range, so everyone shares them."""
-    fixed = [(1, 1), (1, 26), (2, 16), (3, 8), (5, 1), (6, 3), (6, 9), (10, 9), (12, 25), (12, 26)]
-    out = set()
-    for year in range(start.year, end.year + 1):
-        for month, dom in fixed:
-            try:
-                d = date(year, month, dom)
-            except ValueError:
-                continue
-            if start <= d <= end and d.weekday() < 5:
-                out.add(d)
-    return out
 
 
 def _chunked_insert(model, rows: list[dict]) -> int:

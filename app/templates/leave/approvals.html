@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Approvals{% endblock %}
+
+{% block content %}
+<h1 class="h4 mb-1">Leave approvals</h1>
+<p class="text-body-secondary small mb-4">
+  Approving writes the days onto the person's timesheet.
+</p>
+
+{% if requests %}
+<div class="d-grid gap-3">
+  {% for r in requests %}
+  <div class="card">
+    <div class="card-body">
+      <div class="d-flex flex-wrap justify-content-between gap-3">
+        <div>
+          <a class="fw-semibold" href="{{ url_for('employees.detail', employee_id=r.employee.id) }}">
+            {{ r.employee.full_name }}</a>
+          <span class="text-body-secondary small">· {{ r.employee.department.name }}</span>
+          <div class="small mt-1">
+            <span class="badge text-bg-secondary-subtle text-secondary-emphasis">{{ r.leave_type.label }}</span>
+            {{ r.start_date.strftime('%d %b') }}
+            {% if r.end_date != r.start_date %}– {{ r.end_date.strftime('%d %b %Y') }}{% else %}{{ r.start_date.strftime('%Y') }}{% endif %}
+            · {{ r.days | int }} day{{ "" if r.days | int == 1 else "s" }}
+          </div>
+          {% if r.reason %}
+          <p class="small text-body-secondary mt-2 mb-0">{{ r.reason }}</p>
+          {% endif %}
+        </div>
+
+        <div class="d-flex align-items-start gap-2">
+          <form method="post" action="{{ url_for('leave.decide', request_id=r.id, action='approve') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-success" type="submit">Approve</button>
+          </form>
+          <form method="post" action="{{ url_for('leave.decide', request_id=r.id, action='reject') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-danger" type="submit">Reject</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center text-body-secondary py-5">
+  <p class="mb-0">Nothing waiting for approval.</p>
+</div>
+{% endif %}
+{% endblock %}

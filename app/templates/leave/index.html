@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}My leave{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-baseline justify-content-between mb-4">
+  <h1 class="h4 mb-0">My leave</h1>
+  <a class="btn btn-primary btn-sm" href="{{ url_for('leave.new') }}">Request leave</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card h-100"><div class="card-body py-3">
+      <div class="h4 mb-0">{{ balance.remaining | int }}</div>
+      <div class="small text-body-secondary">Days remaining</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card h-100"><div class="card-body py-3">
+      <div class="h4 mb-0">{{ balance.taken | int }}</div>
+      <div class="small text-body-secondary">Taken</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card h-100"><div class="card-body py-3">
+      <div class="h4 mb-0">{{ balance.pending | int }}</div>
+      <div class="small text-body-secondary">Awaiting approval</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card h-100"><div class="card-body py-3">
+      <div class="h4 mb-0">{{ balance.entitlement }}</div>
+      <div class="small text-body-secondary">Annual entitlement</div>
+    </div></div>
+  </div>
+</div>
+
+{% if current_user.is_manager and pending_count %}
+<div class="alert alert-info d-flex justify-content-between align-items-center">
+  <span>{{ pending_count }} request{{ "" if pending_count == 1 else "s" }} waiting on you.</span>
+  <a class="btn btn-sm btn-outline-primary" href="{{ url_for('leave.approvals') }}">Review</a>
+</div>
+{% endif %}
+
+{% if requests %}
+<div class="table-responsive">
+  <table class="table table-sm align-middle">
+    <thead>
+      <tr><th>Dates</th><th>Type</th><th class="text-end">Days</th>
+          <th>Status</th><th class="d-none d-md-table-cell">Decided by</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for r in requests %}
+      <tr>
+        <td>
+          {{ r.start_date.strftime('%d %b %Y') }}
+          {% if r.end_date != r.start_date %}– {{ r.end_date.strftime('%d %b %Y') }}{% endif %}
+        </td>
+        <td>{{ r.leave_type.label }}</td>
+        <td class="text-end">{{ r.days | int }}</td>
+        <td><span class="badge text-bg-{{ r.status.badge }}">{{ r.status.label }}</span></td>
+        <td class="d-none d-md-table-cell text-body-secondary small">
+          {{ r.decided_by.full_name if r.decided_by else "—" }}
+        </td>
+        <td class="text-end">
+          {% if r.status.value in ('pending', 'approved') %}
+          <form method="post" action="{{ url_for('leave.cancel', request_id=r.id) }}"
+                onsubmit="return confirm('Cancel this leave request?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-link btn-sm text-danger p-0" type="submit">Cancel</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="text-center text-body-secondary py-5">
+  <p class="mb-1">No leave requested yet.</p>
+  <a class="small" href="{{ url_for('leave.new') }}">Request some time off</a>
+</div>
+{% endif %}
+{% endblock %}

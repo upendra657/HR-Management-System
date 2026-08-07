@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Request leave{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{{ url_for('leave.index') }}">My leave</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Request</li>
+      </ol>
+    </nav>
+
+    <h1 class="h4 mb-1">Request leave</h1>
+    <p class="text-body-secondary small mb-4">
+      {{ balance.remaining | int }} of {{ balance.entitlement }} days remaining this year.
+      Weekends and public holidays are not counted.
+    </p>
+
+    <form method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="mb-3">
+        <label class="form-label" for="leave_type">Type</label>
+        <select class="form-select" id="leave_type" name="leave_type">
+          {% for t in types %}
+          <option value="{{ t.value }}" {{ "selected" if t.value == form.leave_type }}>{{ t.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-6">
+          <label class="form-label" for="start">First day</label>
+          <input class="form-control" type="date" id="start" name="start"
+                 value="{{ form.start }}" min="{{ today }}" required>
+        </div>
+        <div class="col-6">
+          <label class="form-label" for="end">Last day</label>
+          <input class="form-control" type="date" id="end" name="end"
+                 value="{{ form.end }}" min="{{ today }}" required>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label" for="reason">Reason <span class="text-body-secondary">(optional)</span></label>
+        <textarea class="form-control" id="reason" name="reason" rows="3">{{ form.reason }}</textarea>
+      </div>
+
+      <button class="btn btn-primary" type="submit">Submit request</button>
+      <a class="btn btn-link" href="{{ url_for('leave.index') }}">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -131,17 +131,38 @@ migration to go with it.
 
 ---
 
+## Leave
+
+The one part with real business logic, and why there's a `services/` layer
+at all. Approving leave isn't a status update — it checks who's allowed to
+decide, then writes the approved days onto the timesheet so the two tables
+agree.
+
+Rules worth knowing:
+
+- Weekends and public holidays don't cost you a day, and don't get written
+  to attendance.
+- Pending requests are held against your balance, not just approved ones —
+  otherwise two requests that together exceed your entitlement both sail
+  through because neither had been decided yet.
+- Only annual leave draws the balance down. Sick and bereavement don't.
+- Nobody approves their own request, including HR.
+- Cancelling approved leave removes the leave days it wrote, but leaves
+  alone any day where real attendance has since been recorded.
+
 ## Still to do
 
 - [x] Schema, migrations, auth, roles, Docker, CI
-- [ ] Employee directory, attendance capture, task logging
-- [ ] Leave requests and the approval flow
-- [ ] Seed script with realistic volume — a few hundred employees and a year
-      or so of history, so the reports have something to actually report on
+- [x] Seed script with realistic volume — 250 employees, 18 months,
+      ~215k rows in under 4 seconds
+- [x] Employee directory with search, filtering and paging
+- [x] Leave requests and the approval flow
+- [ ] Attendance capture and task logging screens
 - [ ] Attendance and utilisation dashboards, CSV/Excel export
 - [ ] Data quality checks: orphaned records, impossible time ranges,
       attendance gaps. This is close to what I do at work and I want to see
-      it running against data I control.
+      it running against data I control. The seed data already contains
+      planted discrepancies for it to find.
 - [ ] Deploy a demo with read-only logins
 
 ## Licence
