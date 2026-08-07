@@ -150,6 +150,42 @@ Rules worth knowing:
 - Cancelling approved leave removes the leave days it wrote, but leaves
   alone any day where real attendance has since been recorded.
 
+## Data quality
+
+The part I most wanted to build. It's the same problem as migration
+reconciliation at work: two systems that are supposed to agree usually
+don't, and what's useful is a repeatable report of exactly where and by how
+much — not a vague sense that the numbers are off.
+
+Ten checks, each with a count, a plain-language explanation of why it
+matters, and sample rows so you can go and look at the actual records:
+
+| Check | Finds |
+|---|---|
+| `OPEN_SHIFT` | Clocked in, never clocked out |
+| `WORKED_ON_LEAVE` | Timesheet says present, leave says approved |
+| `LEAVE_NOT_ON_TIMESHEET` | Approved leave that never reached the timesheet |
+| `OVER_LOGGED` | More hours booked to projects than were worked |
+| `TASK_NO_ATTENDANCE` | Work booked on a day with no attendance |
+| `TASK_OUTSIDE_PROJECT` | Time booked to a project that wasn't running |
+| `OUTSIDE_EMPLOYMENT` | Attendance before joining or after leaving |
+| `IMPLAUSIBLE_SHIFT` | Shifts over 16 hours |
+| `NO_MANAGER` | Active staff with nobody to approve their leave |
+| `FUTURE_DATED` | Attendance for days that haven't happened |
+
+Against the seeded data it finds ~440 discrepancies in about half a second
+across 84k attendance and 130k task rows. The seed plants some of them
+deliberately — roughly 6% of approved leave never reaches the timesheet, and
+1.3% of worked days have no clock-out — because a checker that has never
+fired is indistinguishable from one that doesn't work.
+
+**The checks only read.** Nothing in there fixes anything, deliberately: a
+report that quietly edits data is a report you can't trust twice.
+
+Everything aggregates in SQL. It'd read more naturally in pandas, but that
+means moving 80,000 rows to produce twelve. pandas earns its place at the
+export step, handling CSV quoting and the Excel writer.
+
 ## Still to do
 
 - [x] Schema, migrations, auth, roles, Docker, CI
@@ -157,13 +193,12 @@ Rules worth knowing:
       ~215k rows in under 4 seconds
 - [x] Employee directory with search, filtering and paging
 - [x] Leave requests and the approval flow
-- [ ] Attendance capture and task logging screens
-- [ ] Attendance and utilisation dashboards, CSV/Excel export
-- [ ] Data quality checks: orphaned records, impossible time ranges,
-      attendance gaps. This is close to what I do at work and I want to see
-      it running against data I control. The seed data already contains
-      planted discrepancies for it to find.
+- [x] Timesheet: clocking, monthly view, task logging
+- [x] Dashboards and the data quality report, CSV/Excel export
 - [ ] Deploy a demo with read-only logins
+- [ ] Charts on the dashboard — the numbers are all there, they're just
+      tables right now
+- [ ] Org chart from the reporting line
 
 ## Licence
 

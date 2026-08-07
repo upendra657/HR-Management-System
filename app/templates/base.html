@@ -25,6 +25,7 @@
         <li class="nav-item"><a class="nav-link" href="{{ url_for('leave.index') }}">Leave</a></li>
         {% if current_user.is_manager %}
         <li class="nav-item"><a class="nav-link" href="{{ url_for('leave.approvals') }}">Approvals</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('reports.dashboard') }}">Reports</a></li>
         {% endif %}
       </ul>
       <ul class="navbar-nav">

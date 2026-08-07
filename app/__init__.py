@@ -40,12 +40,14 @@ def _register_blueprints(app: Flask) -> None:
     from app.blueprints.employees import bp as employees_bp
     from app.blueprints.leave import bp as leave_bp
     from app.blueprints.main import bp as main_bp
+    from app.blueprints.reports import bp as reports_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(employees_bp, url_prefix="/employees")
     app.register_blueprint(leave_bp, url_prefix="/leave")
     app.register_blueprint(attendance_bp, url_prefix="/timesheet")
+    app.register_blueprint(reports_bp, url_prefix="/reports")
 
 
 def _register_cli(app: Flask) -> None:

@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-4">
+  <h1 class="h4 mb-0">Reports</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary btn-sm"
+       href="{{ url_for('reports.reconciliation') }}">Data quality</a>
+    <div class="dropdown">
+      <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+        Export
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="{{ url_for('reports.export_timesheet', fmt='csv', days=30) }}">Timesheet, 30 days (CSV)</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('reports.export_timesheet', fmt='xlsx', days=30) }}">Timesheet, 30 days (Excel)</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('reports.export_timesheet', fmt='xlsx', days=365) }}">Timesheet, 12 months (Excel)</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  {% for label, value in [
+      ("Active staff", headline.headcount),
+      ("Hours, 30 days", "{:,.0f}".format(headline.hours_30d)),
+      ("Attendance rate", "%s%%" % headline.attendance_rate_30d),
+      ("Active projects", headline.active_projects),
+      ("Awaiting approval", headline.open_leave_requests),
+      ("On leave today", headline.on_leave_today)] %}
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="card h-100"><div class="card-body py-3">
+      <div class="h5 mb-0">{{ value }}</div>
+      <div class="small text-body-secondary">{{ label }}</div>
+    </div></div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 text-body-secondary mb-3">Attendance by month</h2>
+      <table class="table table-sm small mb-0">
+        <thead><tr><th>Month</th><th class="text-end">Records</th>
+          <th class="text-end">Hours</th><th class="text-end">Rate</th></tr></thead>
+        <tbody>
+          {% for m in months %}
+          <tr>
+            <td>{{ m.period }}</td>
+            <td class="text-end">{{ "{:,}".format(m.records) }}</td>
+            <td class="text-end">{{ "{:,.0f}".format(m.hours) }}</td>
+            <td class="text-end">
+              <span class="{{ 'text-danger' if m.attendance_rate < 90 else '' }}">
+                {{ m.attendance_rate }}%
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 text-body-secondary mb-3">Hours by department, 30 days</h2>
+      <table class="table table-sm small mb-0">
+        <thead><tr><th>Department</th><th class="text-end">Hours</th>
+          <th class="text-end">Per person</th></tr></thead>
+        <tbody>
+          {% for d in dept_hours %}
+          <tr>
+            <td>{{ d.department }}</td>
+            <td class="text-end">{{ "{:,.0f}".format(d.hours) }}</td>
+            <td class="text-end text-body-secondary">{{ d.avg_per_person }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 text-body-secondary mb-3">Project utilisation, 90 days</h2>
+      <table class="table table-sm small mb-0">
+        <thead><tr><th>Project</th><th class="d-none d-md-table-cell">Client</th>
+          <th class="text-end">Hours</th><th class="text-end">People</th></tr></thead>
+        <tbody>
+          {% for p in projects %}
+          <tr>
+            <td>
+              <span class="font-monospace">{{ p.code }}</span>
+              {% if not p.active %}<span class="badge text-bg-secondary-subtle text-secondary-emphasis">closed</span>{% endif %}
+            </td>
+            <td class="d-none d-md-table-cell text-body-secondary">{{ p.client }}</td>
+            <td class="text-end">{{ "{:,.0f}".format(p.hours) }}</td>
+            <td class="text-end text-body-secondary">{{ p.people }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card mb-4"><div class="card-body">
+      <h2 class="h6 text-body-secondary mb-3">Leave, 12 months</h2>
+      <table class="table table-sm small mb-0">
+        <thead><tr><th>Type</th><th class="text-end">Requests</th>
+          <th class="text-end">Days</th></tr></thead>
+        <tbody>
+          {% for l in leave %}
+          <tr>
+            <td>{{ l.type }}</td>
+            <td class="text-end">{{ l.requests }}</td>
+            <td class="text-end">{{ "{:,.0f}".format(l.days) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+
+    <div class="card"><div class="card-body">
+      <h2 class="h6 text-body-secondary mb-1">Longest hours, 30 days</h2>
+      <p class="small text-body-secondary">
+        {{ "{:,}".format(overtime) }} shifts over 9 hours in the period.
+      </p>
+      <table class="table table-sm small mb-0">
+        <tbody>
+          {% for t in top[:6] %}
+          <tr>
+            <td>{{ t.employee }}</td>
+            <td class="text-end">{{ t.hours }}h</td>
+            <td class="text-end text-body-secondary">{{ t.avg }}/day</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div></div>
+  </div>
+</div>
+{% endblock %}
