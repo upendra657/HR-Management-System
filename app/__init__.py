@@ -18,6 +18,10 @@ def create_app(config: type[Config] | str | None = None) -> Flask:
 
     _init_extensions(app)
     _register_blueprints(app)
+
+    from app.demo import init_demo
+
+    init_demo(app)
     _register_cli(app)
     _register_errorhandlers(app)
     _register_template_globals(app)

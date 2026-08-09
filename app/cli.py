@@ -13,6 +13,7 @@ from app.extensions import db
 def register_commands(app: Flask) -> None:
     app.cli.add_command(seed)
     app.cli.add_command(create_admin)
+    app.cli.add_command(setup_demo)
 
 
 @click.command("seed")
@@ -63,3 +64,56 @@ def create_admin(username: str, email: str, password: str) -> None:
     db.session.commit()
 
     click.echo(f"Created HR admin {username!r} ({admin.employee_code}).")
+
+
+@click.command("setup-demo")
+@click.option("--employees", default=250, show_default=True)
+@click.option("--months", default=18, show_default=True)
+@click.option("--force", is_flag=True, help="Re-seed even if data already exists.")
+@with_appcontext
+def setup_demo(employees: int, months: int, force: bool) -> None:
+    """Seed the demo and attach the three published logins.
+
+    Idempotent by default so a redeploy does not wipe the database - Render
+    runs the start command on every boot, not just the first.
+    """
+    from sqlalchemy import func
+
+    from app.demo import DEMO_ACCOUNTS, DEMO_PASSWORD
+    from app.models import Employee, Role
+    from scripts.seed import run_seed
+
+    existing = db.session.scalar(select(func.count()).select_from(Employee)) or 0
+    if existing and not force:
+        click.echo(f"{existing} employees already present, skipping seed.")
+    else:
+        run_seed(employees=employees, months=months, reset=bool(existing), quiet=True)
+        click.echo("Seeded.")
+
+    # Point the demo usernames at real people already in the hierarchy, so the
+    # manager account actually has reports and the employee has history.
+    wanted = {
+        "hr_admin": Role.HR_ADMIN,
+        "manager": Role.MANAGER,
+        "employee": Role.EMPLOYEE,
+    }
+    for username, _label, role_key in DEMO_ACCOUNTS:
+        if db.session.scalar(select(Employee).where(Employee.username == username)):
+            continue
+
+        target = db.session.scalar(
+            select(Employee)
+            .where(Employee.role == wanted[role_key], Employee.username.notlike("demo_%"))
+            .order_by(Employee.id)
+        )
+        if target is None:
+            click.echo(f"No {role_key} to alias for {username}.")
+            continue
+
+        target.username = username
+        target.email = f"{username}@example.com"
+        target.set_password(DEMO_PASSWORD)
+        click.echo(f"{username} -> {target.employee_code} {target.full_name}")
+
+    db.session.commit()
+    click.echo("Demo accounts ready.")

@@ -32,9 +32,13 @@
 
     {% if demo_mode %}
     <div class="alert alert-info small mt-4 mb-0">
-      <strong>Demo access</strong><br>
-      HR admin — <code>demo_hr</code> / <code>demo12345</code><br>
-      Employee — <code>demo_emp</code> / <code>demo12345</code>
+      <strong>Read-only demo</strong> — password <code>demo12345</code> for all three.
+      <ul class="mb-2 mt-2 ps-3">
+        <li><code>demo_hr</code> — sees everyone, reports and data quality</li>
+        <li><code>demo_manager</code> — sees their own reports only</li>
+        <li><code>demo_employee</code> — sees only themselves</li>
+      </ul>
+      Signing in as each shows how the access rules differ. Nothing is saved.
     </div>
     {% endif %}
   </div>

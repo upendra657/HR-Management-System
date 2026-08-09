@@ -186,6 +186,45 @@ Everything aggregates in SQL. It'd read more naturally in pandas, but that
 means moving 80,000 rows to produce twelve. pandas earns its place at the
 export step, handling CSV quoting and the Excel writer.
 
+## Deploying
+
+`render.yaml` provisions both the web service and a Postgres instance. In
+Render: **New → Blueprint**, point it at this repo, apply. `SECRET_KEY` is
+generated for you and `DATABASE_URL` is wired from the database.
+
+Two things that cost me time and are worth knowing:
+
+**Render hands out `postgres://` URLs.** SQLAlchemy 2.0 dropped that alias
+and refuses to start, and the default driver would be psycopg2 rather than
+the psycopg 3 this installs. `_normalise_db_url` in `config.py` rewrites it
+to `postgresql+psycopg://`, so the platform's URL works untouched.
+
+**Migrations run in the start command,** not a `preDeployCommand` — that's a
+paid feature. Render runs the start command on every boot, so `setup-demo`
+is idempotent: it skips seeding if employees already exist rather than
+wiping the database on each redeploy.
+
+### The demo is read-only
+
+`DEMO_MODE=true` refuses anything that would write. Sign-in and sign-out
+still work, because seeing the role-based views is most of the point.
+Without this a public demo gets emptied by the first person who finds the
+delete buttons.
+
+Three logins, password `demo12345`:
+
+| Login | Sees |
+|---|---|
+| `demo_hr` | Everyone, all reports, the data quality report |
+| `demo_manager` | Only their own direct reports |
+| `demo_employee` | Only themselves; reports return 403 |
+
+Signing in as each is the quickest way to see the access rules actually
+working rather than taking my word for it.
+
+Free tier caveats: the service sleeps after 15 minutes idle and takes ~30
+seconds to wake, and the free Postgres instance expires after 30 days.
+
 ## Still to do
 
 - [x] Schema, migrations, auth, roles, Docker, CI

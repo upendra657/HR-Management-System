@@ -11,11 +11,26 @@ def _bool(name: str, default: bool = False) -> bool:
     return os.environ.get(name, str(default)).lower() in {"1", "true", "yes", "on"}
 
 
+def _normalise_db_url(url: str) -> str:
+    """Render (and Heroku) hand out postgres:// URLs.
+
+    SQLAlchemy 2.0 dropped that alias and will refuse to start, and the
+    default driver would be psycopg2 rather than the psycopg 3 this project
+    installs. Rewriting here means the deploy works with the URL the platform
+    gives you, untouched.
+    """
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+    if url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return url
+
+
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-do-not-use-in-production")
 
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL", "postgresql+psycopg://hrms:hrms@localhost:5432/hrms"
+    SQLALCHEMY_DATABASE_URI = _normalise_db_url(
+        os.environ.get("DATABASE_URL", "postgresql+psycopg://hrms:hrms@localhost:5432/hrms")
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS: ClassVar[dict[str, Any]] = {

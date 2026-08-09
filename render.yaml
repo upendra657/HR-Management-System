@@ -1,0 +1,48 @@
+# Render blueprint. Point Render at this repo and it provisions both services.
+#
+# Free tier notes:
+#   - the web service sleeps after 15 minutes idle and takes ~30s to wake
+#   - the free Postgres instance expires after 30 days and has to be recreated
+#
+# Migrations and demo setup run in the start command rather than a
+# preDeployCommand, which is a paid feature. `setup-demo` is idempotent, so
+# a redeploy re-runs it harmlessly instead of wiping the database.
+
+databases:
+  - name: hrms-db
+    databaseName: hrms
+    user: hrms
+    plan: free
+
+services:
+  - type: web
+    name: hrms
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: pip install --upgrade pip && pip install -e .
+    startCommand: >
+      flask db upgrade &&
+      flask setup-demo &&
+      gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --timeout 60 --access-logfile -
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.6"
+      - key: FLASK_APP
+        value: wsgi.py
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hrms-db
+          property: connectionString
+      # Read-only: visitors can browse everything, nothing is written.
+      - key: DEMO_MODE
+        value: "true"
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: ITEMS_PER_PAGE
+        value: "25"
