@@ -30,16 +30,29 @@ def _range_from_args() -> tuple[date, date]:
 @bp.route("/")
 @manager_required
 def dashboard() -> Any:
+    months = rp.attendance_by_month()
+    dept_hours = rp.department_hours()
+    projects = rp.project_utilisation()
+    leave = rp.leave_by_type()
+
     return render_template(
         "reports/dashboard.html",
         headline=rp.headline(),
         departments=rp.headcount_by_department(),
-        dept_hours=rp.department_hours(),
-        months=rp.attendance_by_month(),
-        projects=rp.project_utilisation(),
-        leave=rp.leave_by_type(),
+        dept_hours=dept_hours,
+        months=months,
+        projects=projects,
+        leave=leave,
         top=rp.top_hours(),
         overtime=rp.overtime_days(),
+        # Serialised into the page rather than fetched: it is already computed
+        # here, and a second request would only add a loading state to manage.
+        chart_data={
+            "months": months,
+            "departments": dept_hours,
+            "projects": projects[:8],
+            "leave": [x for x in leave if x["days"] > 0],
+        },
     )
 
 

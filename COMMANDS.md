@@ -166,6 +166,7 @@ db.session.scalar(select(func.count()).select_from(AttendanceLog))
 
 # Run the data quality report
 from app.analytics import reconciliation as recon
+
 report = recon.run_all()
 print(report.headline)
 for f in report.failing:
@@ -173,6 +174,7 @@ for f in report.failing:
 
 # Aggregates
 from app.analytics import reports as rp
+
 rp.headline()
 rp.project_utilisation()
 ```

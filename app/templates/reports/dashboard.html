@@ -37,43 +37,82 @@
   {% endfor %}
 </div>
 
-<div class="row g-4">
-  <div class="col-lg-7">
+{# ---- Charts ---------------------------------------------------------- #}
+<div class="row g-4 mb-4">
+  <div class="col-lg-8">
     <div class="card h-100"><div class="card-body">
-      <h2 class="h6 text-body-secondary mb-3">Attendance by month</h2>
-      <table class="table table-sm small mb-0">
-        <thead><tr><th>Month</th><th class="text-end">Records</th>
-          <th class="text-end">Hours</th><th class="text-end">Rate</th></tr></thead>
-        <tbody>
-          {% for m in months %}
-          <tr>
-            <td>{{ m.period }}</td>
-            <td class="text-end">{{ "{:,}".format(m.records) }}</td>
-            <td class="text-end">{{ "{:,.0f}".format(m.hours) }}</td>
-            <td class="text-end">
-              <span class="{{ 'text-danger' if m.attendance_rate < 90 else '' }}">
-                {{ m.attendance_rate }}%
-              </span>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <h2 class="h6 text-body-secondary mb-1">Attendance and hours by month</h2>
+      <p class="small text-body-secondary mb-3">
+        Rate axis starts at 80% — every month sits in the nineties, so a
+        0–100 scale would flatten the variation into a straight line.
+      </p>
+      <div class="chart-box"><canvas id="chart-attendance"></canvas></div>
+    </div></div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 text-body-secondary mb-3">Leave days by type</h2>
+      <div class="chart-box"><canvas id="chart-leave"></canvas></div>
     </div></div>
   </div>
 
   <div class="col-lg-5">
     <div class="card h-100"><div class="card-body">
       <h2 class="h6 text-body-secondary mb-3">Hours by department, 30 days</h2>
+      <div class="chart-box"><canvas id="chart-departments"></canvas></div>
+    </div></div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 text-body-secondary mb-1">Project utilisation, 90 days</h2>
+      <p class="small text-body-secondary mb-3">Grey bars are closed projects.</p>
+      <div class="chart-box"><canvas id="chart-projects"></canvas></div>
+    </div></div>
+  </div>
+</div>
+
+{# ---- Tables ---------------------------------------------------------- #}
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 text-body-secondary mb-3">Attendance by month</h2>
+      <div class="table-responsive">
+        <table class="table table-sm small mb-0">
+          <thead><tr><th>Month</th><th class="text-end">Records</th>
+            <th class="text-end">Hours</th><th class="text-end">Rate</th></tr></thead>
+          <tbody>
+            {% for m in months %}
+            <tr>
+              <td>{{ m.period }}</td>
+              <td class="text-end">{{ "{:,}".format(m.records) }}</td>
+              <td class="text-end">{{ "{:,.0f}".format(m.hours) }}</td>
+              <td class="text-end">
+                <span class="{{ 'text-danger' if m.attendance_rate < 90 else '' }}">
+                  {{ m.attendance_rate }}%
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 text-body-secondary mb-3">Headcount by department</h2>
       <table class="table table-sm small mb-0">
-        <thead><tr><th>Department</th><th class="text-end">Hours</th>
-          <th class="text-end">Per person</th></tr></thead>
+        <thead><tr><th>Department</th><th class="text-end">Total</th>
+          <th class="text-end">Active</th></tr></thead>
         <tbody>
-          {% for d in dept_hours %}
+          {% for d in departments %}
           <tr>
             <td>{{ d.department }}</td>
-            <td class="text-end">{{ "{:,.0f}".format(d.hours) }}</td>
-            <td class="text-end text-body-secondary">{{ d.avg_per_person }}</td>
+            <td class="text-end">{{ d.headcount }}</td>
+            <td class="text-end text-body-secondary">{{ d.active }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -84,45 +123,30 @@
   <div class="col-lg-7">
     <div class="card h-100"><div class="card-body">
       <h2 class="h6 text-body-secondary mb-3">Project utilisation, 90 days</h2>
-      <table class="table table-sm small mb-0">
-        <thead><tr><th>Project</th><th class="d-none d-md-table-cell">Client</th>
-          <th class="text-end">Hours</th><th class="text-end">People</th></tr></thead>
-        <tbody>
-          {% for p in projects %}
-          <tr>
-            <td>
-              <span class="font-monospace">{{ p.code }}</span>
-              {% if not p.active %}<span class="badge text-bg-secondary-subtle text-secondary-emphasis">closed</span>{% endif %}
-            </td>
-            <td class="d-none d-md-table-cell text-body-secondary">{{ p.client }}</td>
-            <td class="text-end">{{ "{:,.0f}".format(p.hours) }}</td>
-            <td class="text-end text-body-secondary">{{ p.people }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="table table-sm small mb-0">
+          <thead><tr><th>Project</th><th class="d-none d-md-table-cell">Client</th>
+            <th class="text-end">Hours</th><th class="text-end">People</th></tr></thead>
+          <tbody>
+            {% for p in projects %}
+            <tr>
+              <td>
+                <span class="font-monospace">{{ p.code }}</span>
+                {% if not p.active %}<span class="badge text-bg-secondary">closed</span>{% endif %}
+              </td>
+              <td class="d-none d-md-table-cell text-body-secondary">{{ p.client }}</td>
+              <td class="text-end">{{ "{:,.0f}".format(p.hours) }}</td>
+              <td class="text-end text-body-secondary">{{ p.people }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div></div>
   </div>
 
   <div class="col-lg-5">
-    <div class="card mb-4"><div class="card-body">
-      <h2 class="h6 text-body-secondary mb-3">Leave, 12 months</h2>
-      <table class="table table-sm small mb-0">
-        <thead><tr><th>Type</th><th class="text-end">Requests</th>
-          <th class="text-end">Days</th></tr></thead>
-        <tbody>
-          {% for l in leave %}
-          <tr>
-            <td>{{ l.type }}</td>
-            <td class="text-end">{{ l.requests }}</td>
-            <td class="text-end">{{ "{:,.0f}".format(l.days) }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div></div>
-
-    <div class="card"><div class="card-body">
+    <div class="card h-100"><div class="card-body">
       <h2 class="h6 text-body-secondary mb-1">Longest hours, 30 days</h2>
       <p class="small text-body-secondary">
         {{ "{:,}".format(overtime) }} shifts over 9 hours in the period.
@@ -141,4 +165,12 @@
     </div></div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{# tojson escapes < > & to unicode escapes, so this is safe inside a script
+   tag even though the data is server-generated. #}
+<script id="chart-data" type="application/json">{{ chart_data | tojson }}</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 {% endblock %}

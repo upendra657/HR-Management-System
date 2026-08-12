@@ -1,4 +1,63 @@
-/* Project styles layered on top of Bootstrap. */
+/* Project styles on top of Bootstrap 5.3.
+   Bootstrap handles dark mode itself via data-bs-theme, so almost everything
+   here works in both. What follows is the handful of places it does not. */
+
 body { font-size: 0.95rem; }
 .navbar-brand { letter-spacing: 0.02em; }
 .table-sm td, .table-sm th { vertical-align: middle; }
+
+/* ---- Theme toggle ------------------------------------------------------ */
+.theme-toggle { line-height: 1; padding: 0.3rem 0.55rem; }
+.theme-toggle .icon-moon { display: none; }
+[data-bs-theme="dark"] .theme-toggle .icon-sun { display: none; }
+[data-bs-theme="dark"] .theme-toggle .icon-moon { display: inline; }
+
+/* ---- Charts ------------------------------------------------------------
+   A fixed height stops the canvas growing without bound as Chart.js resizes,
+   which otherwise produces a page that scrolls forever. */
+.chart-box { position: relative; height: 260px; }
+.chart-box-tall { position: relative; height: 320px; }
+
+/* ---- Dark mode corrections --------------------------------------------- */
+[data-bs-theme="dark"] {
+  /* Bootstrap's default dark body is nearly black; a touch lighter keeps the
+     cards distinguishable from the page behind them. */
+  --bs-body-bg: #16181c;
+  --bs-tertiary-bg: #1f2227;
+}
+
+[data-bs-theme="dark"] .card {
+  --bs-card-bg: #1c1f24;
+  --bs-card-border-color: #2b3037;
+}
+
+/* The employee-initials avatar. Subtle backgrounds go too dark to read
+   against otherwise. */
+.avatar {
+  width: 56px;
+  height: 56px;
+  font-size: 1.1rem;
+}
+[data-bs-theme="dark"] .avatar {
+  background-color: #2b3037 !important;
+  color: #cfd4dc !important;
+}
+
+/* Rows flagged for a missing clock-out. Bootstrap's .table-warning is a light
+   yellow wash that turns black text unreadable in dark mode, so tint the row
+   instead of filling it. */
+[data-bs-theme="dark"] .table > tbody > tr.table-warning > * {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--bs-body-color);
+  background-color: rgba(255, 193, 7, 0.12);
+  box-shadow: inset 3px 0 0 rgba(255, 193, 7, 0.65);
+}
+
+/* Print: always light, whatever the screen theme is. */
+@media print {
+  [data-bs-theme="dark"] {
+    --bs-body-bg: #fff;
+    --bs-body-color: #000;
+  }
+  .theme-toggle, .navbar, footer { display: none !important; }
+}

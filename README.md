@@ -242,10 +242,33 @@ seconds to wake, and the free Postgres instance expires after 30 days.
 - [x] Leave requests and the approval flow
 - [x] Timesheet: clocking, monthly view, task logging
 - [x] Dashboards and the data quality report, CSV/Excel export
+- [x] Dark mode, and charts on the dashboard
 - [ ] Deploy a demo with read-only logins
-- [ ] Charts on the dashboard — the numbers are all there, they're just
-      tables right now
 - [ ] Org chart from the reporting line
+- [ ] Audit trail — for an HR system, salary and role changes going
+      unrecorded is a real gap rather than an oversight
+
+## Dark mode
+
+Bootstrap 5.3 does the work via `data-bs-theme`; the toggle sits in the
+navbar and remembers your choice, falling back to the OS preference.
+
+Two details worth knowing:
+
+The theme is set by a small inline script in `<head>`, not by the deferred
+`theme.js`. A deferred script runs after first paint, so dark mode would
+flash white on every page load. There's a test asserting that script appears
+before the stylesheet.
+
+Both the sun and moon icons ship in the markup and CSS picks one. Swapping
+them in JavaScript leaves the wrong icon visible until the script runs.
+
+The charts read their colours from live CSS variables and re-style on a
+`themechange` event, so switching theme doesn't need a reload. Chart data is
+serialised into a `<script type="application/json">` tag rather than fetched
+— it's already computed for the tables on the same request, and Flask's
+`tojson` escapes angle brackets so a project named `</script>` can't break
+out. There's a test for that too.
 
 ## Licence
 
