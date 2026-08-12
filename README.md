@@ -7,8 +7,9 @@ Solutions in Kampala. It did the job, but it was a prototype — one big
 `app.py`, SQLite, and a few things in it that make me wince now. This is me
 rebuilding it properly.
 
-**Currently:** schema, auth and infrastructure are done. Attendance, leave and
-the reporting side are in progress. Roadmap is at the bottom.
+**Currently:** the directory, timesheet, leave workflow, dashboards and the
+data quality report all work. 219 tests, running against Postgres in CI.
+What's left is at the bottom.
 
 ---
 
@@ -50,8 +51,7 @@ things needed fixing before I'd want anyone looking at it:
 hashed with `werkzeug.security`.
 
 **`users.db` was committed to the repo**, including those plaintext
-credentials. Databases are gitignored here, and there's a pre-commit hook so I
-can't do it again by accident.
+credentials. Databases are gitignored here.
 
 **Role checks were copy-pasted into each route** — which meant one route,
 `/users`, didn't have one at all and would happily dump the whole employee
@@ -73,13 +73,21 @@ app/
 ├── config.py         Config per environment, everything from env vars
 ├── extensions.py     Extension singletons — keeps imports acyclic
 ├── security.py       Role decorator and access checks
-├── cli.py            flask seed / flask create-admin
-├── models/           SQLAlchemy 2.0
-├── blueprints/       Routes
+├── demo.py           Read-only guard for the public demo
+├── cli.py            flask seed / create-admin / setup-demo
+├── models/           SQLAlchemy 2.0 — 7 tables
+├── services/         Business logic: employees, leave, attendance, dates
+├── analytics/        Reconciliation, reports, shared SQL expressions
+├── blueprints/       22 routes across 6 blueprints
 └── templates/
 migrations/           Alembic
-tests/
+scripts/seed.py       Synthetic data generator
+tests/                219 tests
 ```
+
+Views parse the request, call a service, render. Anything touching more than
+one table lives in `services/`; anything aggregating across the whole company
+lives in `analytics/`.
 
 ### The schema
 
