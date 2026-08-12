@@ -24,10 +24,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# The seed generator, needed anywhere the demo data gets built - which
+# includes the deployed demo, not just development. Keeping it out of the
+# base dependencies means a real deployment does not ship a fake-data
+# library it will never call.
+demo = [
+    "Faker>=24.0",
+]
 dev = [
+    "hr-management-system[demo]",
     "pytest>=8.0",
     "pytest-cov>=5.0",
-    "Faker>=24.0",
     "ruff>=0.4",
     "mypy>=1.9",
     "types-python-dateutil",
@@ -39,7 +46,10 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["app*"]
+# scripts/ is included because `flask setup-demo` imports scripts.seed, and
+# that command runs on the deployed demo's first boot. Leaving it out made
+# the app install cleanly and then fail at start with ModuleNotFoundError.
+include = ["app*", "scripts*"]
 
 
 # --------------------------------------------------------------------------

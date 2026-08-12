@@ -31,7 +31,7 @@ Needs Postgres 14+ running somewhere.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate              # Windows: .venv\Scripts\activate
-pip install -e ".[dev]"
+pip install -e ".[dev]"                # dev pulls in [demo], so seeding works
 
 cp .env.example .env                   # edit DATABASE_URL to point at your Postgres
 createdb hrms                          # if it doesn't exist yet
@@ -89,7 +89,7 @@ so you can talk about specific numbers and they'll still be there tomorrow.
 ## Tests
 
 ```bash
-pytest                                 # all 265
+pytest                                 # all 278
 pytest -q                              # quieter
 pytest -v                              # every test name — good for reading
                                        # what the system guarantees

@@ -9,7 +9,7 @@ import pytest
 from sqlalchemy import func, select
 
 from app import create_app
-from app.config import TestingConfig, _normalise_db_url
+from app.config import TestingConfig, _bool, _normalise_db_url
 from app.extensions import db as _db
 from app.models import AttendanceLog, Employee, LeaveRequest, Role
 
@@ -32,6 +32,27 @@ class TestDatabaseUrlNormalisation:
 
     def test_leaves_sqlite_alone(self) -> None:
         assert _normalise_db_url("sqlite:///x.db") == "sqlite:///x.db"
+
+
+class TestDemoModeIsReadFromTheEnvironment:
+    """The tests below set DEMO_MODE as a Python bool, which skips the step
+    that actually matters in production: Render passes the string "true", and
+    if that parsed falsely the public demo would silently accept writes."""
+
+    @pytest.mark.parametrize("raw", ["true", "True", "TRUE", "1", "yes", "on"])
+    def test_truthy_strings_enable_it(self, monkeypatch, raw: str) -> None:
+        monkeypatch.setenv("DEMO_MODE", raw)
+        assert _bool("DEMO_MODE") is True
+
+    @pytest.mark.parametrize("raw", ["false", "False", "0", "no", "off", ""])
+    def test_everything_else_leaves_it_off(self, monkeypatch, raw: str) -> None:
+        monkeypatch.setenv("DEMO_MODE", raw)
+        assert _bool("DEMO_MODE") is False
+
+    def test_absent_means_off(self, monkeypatch) -> None:
+        """A normal deployment must not become read-only by accident."""
+        monkeypatch.delenv("DEMO_MODE", raising=False)
+        assert _bool("DEMO_MODE") is False
 
 
 class _DemoConfig(TestingConfig):

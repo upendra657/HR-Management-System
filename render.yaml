@@ -13,6 +13,10 @@ databases:
     databaseName: hrms
     user: hrms
     plan: free
+    # Must match the web service. A database in another region is reachable
+    # only over the public internet, which the internal connection string
+    # does not use.
+    region: frankfurt
 
 services:
   - type: web
@@ -20,10 +24,18 @@ services:
     runtime: python
     plan: free
     region: frankfurt
-    buildCommand: pip install --upgrade pip && pip install -e .
+    # .[demo], not . - the seed generator needs Faker, and setup-demo runs
+    # below on first boot. Plain `pip install -e .` builds fine and then
+    # fails at start, which is the worst order to find out.
+    buildCommand: pip install --upgrade pip && pip install -e ".[demo]"
+    # Smaller than the local default of 250/18. The seed has to finish before
+    # gunicorn binds the port, and free-tier Postgres is slow enough that
+    # ~215k rows risks the deploy timing out. 80 employees over 12 months is
+    # still ~35k rows - enough for the charts and the reconciliation report
+    # to have something real to say.
     startCommand: >
       flask db upgrade &&
-      flask setup-demo &&
+      flask setup-demo --employees 80 --months 12 &&
       gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --timeout 60 --access-logfile -
     healthCheckPath: /healthz
     envVars:
