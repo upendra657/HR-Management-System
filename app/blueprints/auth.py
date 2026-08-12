@@ -46,7 +46,8 @@ def login() -> Any:
         login_user(employee, remember=bool(request.form.get("remember")))
 
         nxt = request.args.get("next")
-        return redirect(nxt if _is_safe_next(nxt) else url_for("main.dashboard"))
+        target = nxt if nxt and _is_safe_next(nxt) else url_for("main.dashboard")
+        return redirect(target)
 
     return render_template("auth/login.html")
 

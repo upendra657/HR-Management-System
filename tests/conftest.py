@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import date
 from typing import Any, ClassVar
 
 import pytest
 from flask import Flask
 from flask.testing import FlaskClient
+from sqlalchemy import event
 
 from app import create_app
 from app.config import TestingConfig
@@ -22,6 +24,30 @@ from app.extensions import db as _db
 from app.models import Department, Employee, Project, Role
 
 TEST_DB_URL = os.environ.get("TEST_DATABASE_URL", "sqlite:///:memory:")
+
+
+@contextmanager
+def count_queries():
+    """Count SQL statements issued inside the block.
+
+    Used to prove a page does not N+1: rendering 25 rows with a department
+    and a manager on each must not cost 50 extra queries.
+
+    Expires the session first, otherwise the second measurement in a test
+    looks cheaper than the first purely because the identity map is already
+    warm - which is a property of the test, not of the query.
+    """
+    _db.session.expire_all()
+    counter = {"n": 0}
+
+    def before(*_args, **_kwargs):
+        counter["n"] += 1
+
+    event.listen(_db.engine, "before_cursor_execute", before)
+    try:
+        yield counter
+    finally:
+        event.remove(_db.engine, "before_cursor_execute", before)
 
 
 class _Config(TestingConfig):

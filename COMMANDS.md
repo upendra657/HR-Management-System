@@ -89,7 +89,7 @@ so you can talk about specific numbers and they'll still be there tomorrow.
 ## Tests
 
 ```bash
-pytest                                 # all 219
+pytest                                 # all 265
 pytest -q                              # quieter
 pytest -v                              # every test name — good for reading
                                        # what the system guarantees

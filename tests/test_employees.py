@@ -2,38 +2,11 @@
 
 from __future__ import annotations
 
-from contextlib import contextmanager
-
 import pytest
-from sqlalchemy import event
 
-from app.extensions import db
 from app.models import Employee, EmployeeStatus, Role
 from app.services import employees as svc
-
-
-@contextmanager
-def count_queries():
-    """Count SQL statements issued inside the block.
-
-    Used to prove the listing does not N+1: rendering 25 rows with a
-    department and manager on each must not cost 50 extra queries.
-
-    Expires the session first, otherwise the second measurement in a test
-    looks cheaper than the first purely because the identity map is already
-    warm - which is a property of the test, not of the query.
-    """
-    db.session.expire_all()
-    counter = {"n": 0}
-
-    def before(*_args, **_kwargs):
-        counter["n"] += 1
-
-    event.listen(db.engine, "before_cursor_execute", before)
-    try:
-        yield counter
-    finally:
-        event.remove(db.engine, "before_cursor_execute", before)
+from tests.conftest import count_queries
 
 
 @pytest.fixture()

@@ -318,9 +318,9 @@ def run_seed(
         dept_manager[depts[code].id] = mgr
     for p in people:
         if p.role == Role.EMPLOYEE:
-            mgr = dept_manager.get(p.department_id)
-            if mgr and mgr.id != p.id:
-                p.manager_id = mgr.id
+            line_manager = dept_manager.get(p.department_id)
+            if line_manager and line_manager.id != p.id:
+                p.manager_id = line_manager.id
     db.session.commit()
 
     say(

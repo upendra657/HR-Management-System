@@ -7,6 +7,8 @@ from typing import Any
 from flask import Blueprint, redirect, render_template, url_for
 from flask_login import current_user, login_required
 
+from app.services import dashboard as dash
+
 bp = Blueprint("main", __name__)
 
 
@@ -20,7 +22,13 @@ def index() -> Any:
 @bp.route("/dashboard")
 @login_required
 def dashboard() -> Any:
-    return render_template("main/dashboard.html")
+    board = dash.build(current_user)
+    return render_template(
+        "main/dashboard.html",
+        board=board,
+        mix=dash.attendance_mix(board),
+        chart_data=dash.chart_payload(board),
+    )
 
 
 @bp.route("/healthz")

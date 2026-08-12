@@ -95,6 +95,14 @@ exclude = ["migrations/", "tests/"]
 module = ["flask_migrate.*", "flask_login.*"]
 ignore_errors = true
 
+# Flask-SQLAlchemy builds db.Model at runtime by mixing its own bases into the
+# declarative base, so mypy cannot resolve it as a base class and reports every
+# model as name-defined. Scoped to the models package and to that one code, so
+# a genuine undefined name anywhere else still fails the build.
+[[tool.mypy.overrides]]
+module = ["app.models.*"]
+disable_error_code = ["name-defined"]
+
 
 # --------------------------------------------------------------------------
 # pytest

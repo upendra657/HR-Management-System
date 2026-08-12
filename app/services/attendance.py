@@ -115,7 +115,7 @@ def month_summary(employee_id: int, year: int, month_no: int) -> MonthSummary:
     first = date(year, month_no, 1)
     last = date(year, month_no, monthrange(year, month_no)[1])
 
-    counts = dict(
+    counts: dict[AttendanceStatus, int] = dict(
         db.session.execute(
             select(AttendanceLog.status, func.count())
             .where(
@@ -124,7 +124,9 @@ def month_summary(employee_id: int, year: int, month_no: int) -> MonthSummary:
                 AttendanceLog.work_date <= last,
             )
             .group_by(AttendanceLog.status)
-        ).all()
+        )
+        .tuples()
+        .all()
     )
 
     rows = db.session.execute(

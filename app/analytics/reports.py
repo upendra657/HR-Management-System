@@ -64,12 +64,14 @@ def headline() -> Headline:
     )
 
     # Attendance rate over the same window, holidays excluded from the base.
-    counts = dict(
+    counts: dict[AttendanceStatus, int] = dict(
         db.session.execute(
             select(AttendanceLog.status, func.count())
             .where(AttendanceLog.work_date >= since)
             .group_by(AttendanceLog.status)
-        ).all()
+        )
+        .tuples()
+        .all()
     )
     countable = sum(n for s, n in counts.items() if s is not AttendanceStatus.HOLIDAY)
     worked = sum(counts.get(s, 0) for s in WORKED)

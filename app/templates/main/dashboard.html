@@ -2,11 +2,319 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h1 class="h4 mb-4">Dashboard</h1>
-<div class="alert alert-secondary">
-  Signed in as <strong>{{ current_user.full_name }}</strong>
-  ({{ current_user.employee_code }}) — {{ current_user.job_title }},
-  {{ current_user.department.name }}.
+<div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-4">
+  <div>
+    {# Full name, not a first-name greeting: seeded titles turn "Dr Julie
+       Hudson" into "Dr", and there is no reliable way to strip honorifics. #}
+    <h1 class="h4 mb-1">{{ current_user.full_name }}</h1>
+    <p class="text-body-secondary small mb-0">
+      {{ current_user.job_title }} · {{ current_user.department.name }}
+      <span class="font-monospace ms-1">{{ current_user.employee_code }}</span>
+    </p>
+  </div>
+  <div class="text-lg-end small text-body-secondary">
+    {{ board.today.strftime('%A %d %B %Y') }}
+  </div>
 </div>
-<p class="text-body-secondary small mb-0">Analytics land in phase 3.</p>
+
+{# ---- Today: clock state and the one action worth putting on a landing page #}
+<div class="card mb-4">
+  <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div>
+      <div class="small text-body-secondary">Today</div>
+      {% if board.log and board.log.clock_in %}
+        <div>
+          In at <strong>{{ board.log.clock_in.strftime('%H:%M') }}</strong>
+          {% if board.log.clock_out %}
+            · out at <strong>{{ board.log.clock_out.strftime('%H:%M') }}</strong>
+            · <strong>{{ board.log.hours_worked }}</strong> hours
+          {% else %}
+            <span class="text-success fw-semibold">· still clocked in</span>
+          {% endif %}
+        </div>
+        {% if board.unbooked_hours %}
+        <div class="small text-warning-emphasis mt-1">
+          {{ board.unbooked_hours }} hours not yet booked to a project.
+        </div>
+        {% endif %}
+      {% elif board.log %}
+        <div>Recorded as <strong>{{ board.log.status.label }}</strong>.</div>
+      {% else %}
+        <div class="text-body-secondary">Not clocked in.</div>
+      {% endif %}
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+      {% if not board.log or not board.log.clock_in %}
+        <form method="post" action="{{ url_for('attendance.clock_in') }}" class="d-flex gap-2">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-primary btn-sm" type="submit">Clock in</button>
+          <button class="btn btn-outline-secondary btn-sm" type="submit" name="remote" value="1">
+            Remote
+          </button>
+        </form>
+      {% elif not board.log.clock_out %}
+        <form method="post" action="{{ url_for('attendance.clock_out') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-primary btn-sm" type="submit">Clock out</button>
+        </form>
+      {% endif %}
+      <a class="btn btn-outline-secondary btn-sm"
+         href="{{ url_for('attendance.day', the_date=board.today.isoformat()) }}">Log time</a>
+      <a class="btn btn-outline-secondary btn-sm"
+         href="{{ url_for('leave.new') }}">Request leave</a>
+    </div>
+  </div>
+</div>
+
+{# ---- This month, at a glance ------------------------------------------- #}
+<div class="row g-3 mb-4">
+  {% for label, value in [
+      ("Hours this month", board.month.hours),
+      ("Days recorded", "%s / %s" % (board.month.recorded, board.month.expected_days)),
+      ("Leave taken", board.balance.taken),
+      ("Leave left", board.balance.remaining)] %}
+  <div class="col-6 col-lg-3">
+    <div class="card h-100"><div class="card-body py-3">
+      <div class="h4 mb-0">{{ value }}</div>
+      <div class="small text-body-secondary">{{ label }}</div>
+    </div></div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if board.month.unrecorded %}
+<div class="alert alert-warning py-2 small">
+  {{ board.month.unrecorded }} working day{{ "" if board.month.unrecorded == 1 else "s" }}
+  this month with nothing recorded.
+  <a href="{{ url_for('attendance.index') }}" class="alert-link">Open the timesheet</a>.
+</div>
+{% endif %}
+
+<div class="row g-4">
+  {# ---- Personal hours chart -------------------------------------------- #}
+  <div class="col-lg-8">
+    <div class="card h-100"><div class="card-body">
+      <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-1">
+        <h2 class="h6 text-body-secondary mb-0">My hours, last 14 working days</h2>
+        <span class="small text-body-secondary">{{ board.chart_hours }} hours total</span>
+      </div>
+      <p class="small text-body-secondary mb-3">
+        Weekends and public holidays are left out. Amber bars are days you
+        clocked in but never clocked out.
+      </p>
+      <div class="chart-box"><canvas id="chart-my-hours"></canvas></div>
+    </div></div>
+  </div>
+
+  {# ---- Leave balance ---------------------------------------------------- #}
+  <div class="col-lg-4">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 text-body-secondary mb-3">Annual leave, {{ board.today.year }}</h2>
+
+      <div class="d-flex align-items-baseline gap-2 mb-2">
+        <span class="display-6 mb-0">{{ board.balance.remaining }}</span>
+        <span class="text-body-secondary small">of {{ board.balance.entitlement }} days left</span>
+      </div>
+
+      <div class="progress mb-3" style="height:8px" role="progressbar"
+           aria-valuenow="{{ board.balance.used_pct }}" aria-valuemin="0" aria-valuemax="100"
+           aria-label="Annual leave used">
+        <div class="progress-bar" style="width: {{ board.balance.used_pct }}%"></div>
+      </div>
+
+      <dl class="row small mb-0">
+        <dt class="col-7 fw-normal text-body-secondary">Approved</dt>
+        <dd class="col-5 text-end mb-1">{{ board.balance.taken }} days</dd>
+        <dt class="col-7 fw-normal text-body-secondary">Awaiting a decision</dt>
+        <dd class="col-5 text-end mb-0">{{ board.balance.pending }} days</dd>
+      </dl>
+
+      {% if board.balance.pending %}
+      <p class="small text-body-secondary mt-3 mb-0">
+        Pending days are held against the balance, so the figure above is what
+        you can still book.
+      </p>
+      {% endif %}
+    </div></div>
+  </div>
+
+  {# ---- Manager: approval queue ------------------------------------------ #}
+  {% if current_user.is_manager %}
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body">
+      <div class="d-flex align-items-baseline justify-content-between mb-3">
+        <h2 class="h6 text-body-secondary mb-0">
+          Awaiting your approval
+          {% if board.queue_total %}
+          <span class="badge text-bg-primary ms-1">{{ board.queue_total }}</span>
+          {% endif %}
+        </h2>
+        {% if board.queue_total > board.queue | length %}
+        <a class="small" href="{{ url_for('leave.approvals') }}">See all</a>
+        {% endif %}
+      </div>
+
+      {% if board.queue %}
+      <ul class="list-unstyled small mb-0">
+        {% for r in board.queue %}
+        <li class="d-flex justify-content-between gap-3 border-bottom py-2">
+          <span>
+            <a href="{{ url_for('employees.detail', employee_id=r.employee.id) }}">
+              {{ r.employee.full_name }}</a>
+            <span class="text-body-secondary">
+              · {{ r.leave_type.label }}, {{ r.days }} day{{ "" if r.days == 1 else "s" }}
+            </span>
+          </span>
+          <span class="text-body-secondary text-nowrap">
+            {{ r.start_date.strftime('%d %b') }}
+          </span>
+        </li>
+        {% endfor %}
+      </ul>
+      <a class="btn btn-outline-secondary btn-sm mt-3"
+         href="{{ url_for('leave.approvals') }}">Open approvals</a>
+      {% else %}
+      <p class="small text-body-secondary mb-0">Nothing waiting on you.</p>
+      {% endif %}
+    </div></div>
+  </div>
+  {% endif %}
+
+  {# ---- Who is off ------------------------------------------------------- #}
+  <div class="col-lg-{{ 6 if current_user.is_manager else 12 }}">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 text-body-secondary mb-3">
+        {% if current_user.is_hr %}Off today, company-wide
+        {% elif current_user.is_manager %}Off today, your team
+        {% else %}Your approved leave{% endif %}
+        {% if board.away_total %}
+        <span class="badge text-bg-secondary ms-1">{{ board.away_total }}</span>
+        {% endif %}
+      </h2>
+
+      {% if board.away %}
+      <ul class="list-unstyled small mb-0">
+        {% for r in board.away %}
+        <li class="d-flex justify-content-between gap-3 border-bottom py-2">
+          <span>
+            {{ r.employee.full_name }}
+            <span class="text-body-secondary">· {{ r.leave_type.label }}</span>
+          </span>
+          <span class="text-body-secondary text-nowrap">
+            until {{ r.end_date.strftime('%d %b') }}
+          </span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% if board.away_total > board.away | length %}
+      <p class="small text-body-secondary mt-2 mb-0">
+        and {{ board.away_total - board.away | length }} more.
+      </p>
+      {% endif %}
+      {% else %}
+      <p class="small text-body-secondary mb-0">
+        {% if current_user.is_manager %}Everyone is in today.
+        {% else %}You have no leave booked for today.{% endif %}
+      </p>
+      {% endif %}
+    </div></div>
+  </div>
+
+  {# ---- My recent leave requests ----------------------------------------- #}
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body">
+      <div class="d-flex align-items-baseline justify-content-between mb-3">
+        <h2 class="h6 text-body-secondary mb-0">My recent requests</h2>
+        <a class="small" href="{{ url_for('leave.index') }}">All leave</a>
+      </div>
+
+      {% if board.my_leave %}
+      <table class="table table-sm small mb-0">
+        <tbody>
+          {% for r in board.my_leave %}
+          <tr>
+            <td>{{ r.leave_type.label }}</td>
+            <td class="text-body-secondary">
+              {{ r.start_date.strftime('%d %b') }}
+              {%- if r.days > 1 %} – {{ r.end_date.strftime('%d %b') }}{% endif %}
+            </td>
+            <td class="text-end">{{ r.days }}d</td>
+            <td class="text-end">
+              <span class="badge text-bg-{{ r.status.badge }}">{{ r.status.label }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="small text-body-secondary mb-0">
+        No leave requested yet.
+        <a href="{{ url_for('leave.new') }}">Book some</a>.
+      </p>
+      {% endif %}
+    </div></div>
+  </div>
+
+  {# ---- This month by status --------------------------------------------- #}
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 text-body-secondary mb-3">
+        {{ board.today.strftime('%B') }} by status
+      </h2>
+
+      {% if mix %}
+      <table class="table table-sm small mb-0">
+        <tbody>
+          {% for label, count in mix %}
+          <tr>
+            <td>{{ label }}</td>
+            <td class="text-end">{{ count }} day{{ "" if count == 1 else "s" }}</td>
+          </tr>
+          {% endfor %}
+          {% if board.month.missing_clock_out %}
+          <tr>
+            <td class="text-warning-emphasis">No clock-out</td>
+            <td class="text-end text-warning-emphasis">
+              {{ board.month.missing_clock_out }}
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="small text-body-secondary mb-0">Nothing recorded this month yet.</p>
+      {% endif %}
+    </div></div>
+  </div>
+
+  {# ---- HR: a way into the reports --------------------------------------- #}
+  {% if current_user.is_manager %}
+  <div class="col-12">
+    <div class="card"><div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div>
+        <h2 class="h6 mb-1">Company reports</h2>
+        <p class="small text-body-secondary mb-0">
+          Attendance and hours by month, project utilisation, and the data
+          quality report that reconciles leave against the timesheet.
+        </p>
+      </div>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary btn-sm"
+           href="{{ url_for('reports.dashboard') }}">Reports</a>
+        <a class="btn btn-outline-secondary btn-sm"
+           href="{{ url_for('reports.reconciliation') }}">Data quality</a>
+      </div>
+    </div></div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{# tojson escapes < > & to unicode escapes, so this is safe inside a script
+   tag even though the data is server-generated. #}
+<script id="chart-data" type="application/json">{{ chart_data | tojson }}</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 {% endblock %}

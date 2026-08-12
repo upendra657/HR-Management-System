@@ -115,8 +115,11 @@ class Employee(TimestampMixin, UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     @property
-    def is_active(self) -> bool:  # type: ignore[override]
+    def is_active(self) -> bool:
         # Flask-Login checks this on login, so leavers can't sign in.
+        # This narrows UserMixin.is_active from a plain attribute to a
+        # property; mypy does not see the clash because it cannot resolve
+        # db.Model as a base, and warn_unused_ignores rejects an ignore here.
         return self.status != EmployeeStatus.TERMINATED
 
     def has_role(self, *roles: Role) -> bool:

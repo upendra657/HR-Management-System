@@ -1,5 +1,9 @@
 /* Dashboard charts.
  *
+ * Two pages use this file: the personal landing page and the company reports
+ * dashboard. Each renders a different set of keys into the JSON tag, so every
+ * chart below is guarded on both its data and its canvas being present.
+ *
  * Data comes from a JSON script tag rendered by the template rather than a
  * fetch, because it is already computed server-side and an extra round trip
  * would only add a loading state to manage.
@@ -69,6 +73,44 @@
     Chart.defaults.color = p.muted;
     Chart.defaults.font.family =
       getComputedStyle(document.body).fontFamily || "system-ui";
+
+    // --- My hours, last 14 working days -------------------------------------
+    // Landing page only. Amber marks a day that was clocked in but never
+    // clocked out, so the zero reads as a recording gap rather than a day off.
+    if (DATA.recent_days) {
+      const days = DATA.recent_days;
+      make("chart-my-hours", {
+        type: "bar",
+        data: {
+          labels: days.map((d) => d.label),
+          datasets: [
+            {
+              label: "Hours",
+              data: days.map((d) => d.hours),
+              backgroundColor: days.map((d) =>
+                d.incomplete ? SERIES.amber : SERIES.blue
+              ),
+              borderRadius: 3,
+            },
+          ],
+        },
+        options: Object.assign(baseOptions(p), {
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (i) =>
+                  days[i.dataIndex].incomplete
+                    ? " no clock-out recorded"
+                    : ` ${i.parsed.y} hours`,
+              },
+            },
+          },
+        }),
+      });
+    }
+
+    if (!DATA.months) return;
 
     // --- Attendance rate and hours over time --------------------------------
     const months = DATA.months;

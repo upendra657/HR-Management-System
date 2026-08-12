@@ -129,7 +129,7 @@ def search(
 
 def get_visible(viewer: Employee, employee_id: int) -> Employee | None:
     """Fetch one employee, or None if this viewer is not allowed to see them."""
-    return db.session.scalar(
+    employee: Employee | None = db.session.scalar(
         visible_to(viewer)
         .where(Employee.id == employee_id)
         .options(
@@ -138,6 +138,7 @@ def get_visible(viewer: Employee, employee_id: int) -> Employee | None:
             selectinload(Employee.reports),
         )
     )
+    return employee
 
 
 def departments() -> list[Department]:
@@ -206,7 +207,7 @@ def attendance_summary(employee_id: int, days: int = 90) -> AttendanceSummary:
     """
     since = date.today() - timedelta(days=days)
 
-    counts = dict(
+    counts: dict[AttendanceStatus, int] = dict(
         db.session.execute(
             select(AttendanceLog.status, func.count())
             .where(
@@ -214,7 +215,9 @@ def attendance_summary(employee_id: int, days: int = 90) -> AttendanceSummary:
                 AttendanceLog.work_date >= since,
             )
             .group_by(AttendanceLog.status)
-        ).all()
+        )
+        .tuples()
+        .all()
     )
 
     missing = (

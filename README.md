@@ -8,7 +8,7 @@ Solutions in Kampala. It did the job, but it was a prototype — one big
 rebuilding it properly.
 
 **Currently:** the directory, timesheet, leave workflow, dashboards and the
-data quality report all work. 219 tests, running against Postgres in CI.
+data quality report all work. 265 tests, running against Postgres in CI.
 What's left is at the bottom.
 
 ---
@@ -76,13 +76,13 @@ app/
 ├── demo.py           Read-only guard for the public demo
 ├── cli.py            flask seed / create-admin / setup-demo
 ├── models/           SQLAlchemy 2.0 — 7 tables
-├── services/         Business logic: employees, leave, attendance, dates
+├── services/         Business logic: employees, leave, attendance, dashboard
 ├── analytics/        Reconciliation, reports, shared SQL expressions
 ├── blueprints/       22 routes across 6 blueprints
 └── templates/
 migrations/           Alembic
 scripts/seed.py       Synthetic data generator
-tests/                219 tests
+tests/                265 tests
 ```
 
 Views parse the request, call a service, render. Anything touching more than
@@ -138,6 +138,27 @@ catches the easy mistake of editing a model and forgetting to generate the
 migration to go with it.
 
 ---
+
+## The landing page
+
+Everyone lands on `/dashboard`, so it is the page that has to work for all
+three roles at once. It shows your clock state and the button that matches it,
+this month's hours, your leave balance, and a bar per working day for the last
+fortnight. Managers additionally get their approval queue and who on their team
+is off; HR gets the same, company-wide.
+
+Two decisions worth knowing:
+
+**The lists are previews with separate counts.** HR's approval queue is every
+pending request in the company, so the page fetches five and counts the rest.
+A landing page that gets slower as the company grows is a bad landing page.
+There's a test asserting the query count doesn't move when the number of
+pending requests goes from three to twelve.
+
+**Days with no attendance are plotted as zero, not skipped.** A gap in the bars
+reads as a broken chart. Days where someone clocked in and never out are
+coloured amber instead — the zero there is a recording gap, not a day off,
+which is the same distinction the reconciliation report is built around.
 
 ## Leave
 
@@ -243,6 +264,7 @@ seconds to wake, and the free Postgres instance expires after 30 days.
 - [x] Timesheet: clocking, monthly view, task logging
 - [x] Dashboards and the data quality report, CSV/Excel export
 - [x] Dark mode, and charts on the dashboard
+- [x] Personal landing page — clock state, balance, approval queue
 - [ ] Deploy a demo with read-only logins
 - [ ] Org chart from the reporting line
 - [ ] Audit trail — for an HR system, salary and role changes going
