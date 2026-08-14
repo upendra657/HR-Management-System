@@ -1,6 +1,16 @@
 # HR Management System
 
+[![CI](https://github.com/upendra657/HR-Management-System/actions/workflows/ci.yml/badge.svg)](https://github.com/upendra657/HR-Management-System/actions/workflows/ci.yml)
+
 Flask + PostgreSQL app for tracking employees, attendance, tasks and leave.
+
+**[Live demo →](https://hrms-5e8y.onrender.com)** — sign in as `demo_hr`,
+`demo_manager` or `demo_employee`, password `demo12345`. Read-only. It's on a
+free instance, so the first load takes ~30 seconds to wake.
+
+Signing in as each of the three is the quickest way to see the access rules
+working: HR sees everyone, a manager sees only their own reports, an employee
+sees only themselves and gets a 403 on the reports pages.
 
 I wrote a version of this during an internship at MFI Document Solutions in
 Kampala. It did the job, but it was a prototype — one big `app.py`, SQLite, and
@@ -201,7 +211,7 @@ seconds to wake, and the free Postgres expires after 30 days.
 - [x] Employee directory, leave workflow, timesheet
 - [x] Dashboards, data quality report, CSV/Excel export
 - [x] Dark mode and charts
-- [ ] Deploy a demo with read-only logins
+- [x] Deploy a demo with read-only logins
 - [ ] Org chart from the reporting line
 - [ ] Audit trail — for an HR system, salary and role changes going unrecorded
       is a real gap rather than an oversight
